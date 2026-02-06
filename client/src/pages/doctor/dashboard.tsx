@@ -2,6 +2,7 @@ import LayoutShell from "@/components/layout-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { useAppointments } from "@/hooks/use-appointments";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
