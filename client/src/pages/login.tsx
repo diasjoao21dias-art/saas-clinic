@@ -11,8 +11,8 @@ import { useLocation } from "wouter";
 import { useEffect } from "react";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
+  username: z.string().min(1, "Usuário é obrigatório"),
+  password: z.string().min(1, "Senha é obrigatória"),
 });
 
 export default function LoginPage() {
@@ -42,7 +42,7 @@ export default function LoginPage() {
   // Pre-fill helpers for demo
   const fillCredentials = (role: string) => {
     form.setValue("username", role);
-    form.setValue("password", role); // Assuming password matches username for demo seeds
+    form.setValue("password", "password123"); // Fixed password for demo seeds
   };
 
   return (
@@ -54,16 +54,16 @@ export default function LoginPage() {
           <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-8 backdrop-blur-sm">
             <Stethoscope className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-display font-bold mb-6">MediFlow Clinic Management</h1>
+          <h1 className="text-4xl font-display font-bold mb-6">MediFlow - Gestão de Clínicas</h1>
           <p className="text-lg text-blue-100 leading-relaxed">
-            Streamline your medical practice with our comprehensive solution for patient care, scheduling, and clinical records.
+            Otimize sua prática médica com nossa solução abrangente para atendimento ao paciente, agendamento e registros clínicos.
           </p>
           
           <div className="grid grid-cols-3 gap-4 mt-12">
             {[
-              { icon: Activity, label: "Real-time Vitals" },
-              { icon: ShieldCheck, label: "Secure Records" },
-              { icon: Stethoscope, label: "Clinical Tools" }
+              { icon: Activity, label: "Sinais Vitais" },
+              { icon: ShieldCheck, label: "Registros Seguros" },
+              { icon: Stethoscope, label: "Ferramentas Clínicas" }
             ].map((item, i) => (
               <div key={i} className="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/10">
                 <item.icon className="w-6 h-6 mx-auto mb-2" />
@@ -78,14 +78,14 @@ export default function LoginPage() {
       <div className="flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-display font-bold text-slate-900">Welcome back</h2>
-            <p className="text-slate-500 mt-2">Please sign in to access your account</p>
+            <h2 className="text-3xl font-display font-bold text-slate-900">Bem-vindo de volta</h2>
+            <p className="text-slate-500 mt-2">Por favor, faça login para acessar sua conta</p>
           </div>
 
           <Card className="border-none shadow-xl shadow-slate-200/50">
             <CardHeader>
-              <CardTitle>Sign In</CardTitle>
-              <CardDescription>Use your staff credentials to continue</CardDescription>
+              <CardTitle>Entrar</CardTitle>
+              <CardDescription>Use suas credenciais de funcionário para continuar</CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -95,9 +95,9 @@ export default function LoginPage() {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>Usuário</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter username" {...field} className="h-11" />
+                          <Input placeholder="Digite seu usuário" {...field} className="h-11" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -108,7 +108,7 @@ export default function LoginPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>Senha</FormLabel>
                         <FormControl>
                           <Input type="password" placeholder="••••••••" {...field} className="h-11" />
                         </FormControl>
@@ -121,7 +121,7 @@ export default function LoginPage() {
                     className="w-full h-11 text-base shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all" 
                     disabled={isLoggingIn}
                   >
-                    {isLoggingIn ? "Signing in..." : "Sign In"}
+                    {isLoggingIn ? "Entrando..." : "Entrar"}
                   </Button>
                 </form>
               </Form>
@@ -129,11 +129,11 @@ export default function LoginPage() {
           </Card>
 
           <div className="text-center space-y-4">
-            <p className="text-sm text-slate-400 uppercase tracking-wider font-medium text-xs">Demo Accounts</p>
+            <p className="text-sm text-slate-400 uppercase tracking-wider font-medium text-xs">Contas de Demonstração</p>
             <div className="flex gap-3 justify-center">
               <Button variant="outline" size="sm" onClick={() => fillCredentials('admin')}>Admin</Button>
-              <Button variant="outline" size="sm" onClick={() => fillCredentials('doctor')}>Doctor</Button>
-              <Button variant="outline" size="sm" onClick={() => fillCredentials('operator')}>Reception</Button>
+              <Button variant="outline" size="sm" onClick={() => fillCredentials('doctor')}>Médico</Button>
+              <Button variant="outline" size="sm" onClick={() => fillCredentials('operator')}>Recepção</Button>
             </div>
           </div>
         </div>

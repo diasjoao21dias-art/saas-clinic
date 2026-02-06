@@ -45,20 +45,20 @@ export default function PatientDirectory() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-slate-900">Patient Directory</h1>
-            <p className="text-muted-foreground mt-1">Manage patient records and information</p>
+            <h1 className="text-3xl font-display font-bold text-slate-900">Diretório de Pacientes</h1>
+            <p className="text-muted-foreground mt-1">Gerencie registros e informações dos pacientes</p>
           </div>
           
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                 <Plus className="w-5 h-5 mr-2" />
-                Add Patient
+                Adicionar Paciente
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Register New Patient</DialogTitle>
+                <DialogTitle>Registrar Novo Paciente</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -68,7 +68,7 @@ export default function PatientDirectory() {
                       name="name"
                       render={({ field }) => (
                         <FormItem className="col-span-2">
-                          <FormLabel>Full Name</FormLabel>
+                          <FormLabel>Nome Completo</FormLabel>
                           <FormControl><Input {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
@@ -79,7 +79,7 @@ export default function PatientDirectory() {
                       name="cpf"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>CPF / ID</FormLabel>
+                          <FormLabel>CPF</FormLabel>
                           <FormControl><Input {...field} value={field.value || ""} /></FormControl>
                           <FormMessage />
                         </FormItem>
@@ -90,7 +90,7 @@ export default function PatientDirectory() {
                       name="birthDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Date of Birth</FormLabel>
+                          <FormLabel>Data de Nascimento</FormLabel>
                           <FormControl><Input type="date" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
@@ -101,7 +101,7 @@ export default function PatientDirectory() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone</FormLabel>
+                          <FormLabel>Telefone</FormLabel>
                           <FormControl><Input {...field} value={field.value || ""} /></FormControl>
                           <FormMessage />
                         </FormItem>
@@ -121,7 +121,7 @@ export default function PatientDirectory() {
                   </div>
                   <div className="flex justify-end pt-4">
                     <Button type="submit" disabled={createPatient.isPending}>
-                      {createPatient.isPending ? "Creating..." : "Create Patient Record"}
+                      {createPatient.isPending ? "Criando..." : "Criar Registro do Paciente"}
                     </Button>
                   </div>
                 </form>
@@ -135,7 +135,7 @@ export default function PatientDirectory() {
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
-                placeholder="Search by name, CPF, or phone..." 
+                placeholder="Buscar por nome, CPF ou telefone..." 
                 className="pl-10"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -146,10 +146,10 @@ export default function PatientDirectory() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50 hover:bg-slate-50">
-                  <TableHead className="w-[300px]">Name</TableHead>
-                  <TableHead>Contact Info</TableHead>
-                  <TableHead>Birth Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="w-[300px]">Nome</TableHead>
+                  <TableHead>Contato</TableHead>
+                  <TableHead>Nascimento</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -172,10 +172,10 @@ export default function PatientDirectory() {
                         <p className="text-muted-foreground">{patient.email}</p>
                       </div>
                     </TableCell>
-                    <TableCell>{format(new Date(patient.birthDate), 'MMM d, yyyy')}</TableCell>
+                    <TableCell>{format(new Date(patient.birthDate), 'dd/MM/yyyy')}</TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
-                        View Details
+                        Ver Detalhes
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -183,7 +183,7 @@ export default function PatientDirectory() {
                 {!patients?.length && !isLoading && (
                   <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                      No patients found.
+                      Nenhum paciente encontrado.
                     </TableCell>
                   </TableRow>
                 )}

@@ -28,21 +28,21 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
       case "admin":
         return [
           { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-          { href: "/admin/users", label: "Staff Management", icon: Users },
-          { href: "/admin/clinics", label: "Clinics", icon: Building2 },
+          { href: "/admin/users", label: "Gestão de Equipe", icon: Users },
+          { href: "/admin/clinics", label: "Clínicas", icon: Building2 },
         ];
       case "doctor":
         return [
           { href: "/doctor/dashboard", label: "Dashboard", icon: LayoutDashboard },
-          { href: "/doctor/appointments", label: "My Schedule", icon: CalendarDays },
-          { href: "/reception/patients", label: "Patient Directory", icon: Users },
+          { href: "/doctor/appointments", label: "Minha Agenda", icon: CalendarDays },
+          { href: "/reception/patients", label: "Diretório de Pacientes", icon: Users },
         ];
       case "operator":
         return [
           { href: "/reception/dashboard", label: "Dashboard", icon: LayoutDashboard },
-          { href: "/reception/schedule", label: "Schedule", icon: CalendarDays },
-          { href: "/reception/patients", label: "Patients", icon: Users },
-          { href: "/reception/checkin", label: "Quick Check-in", icon: ClipboardList },
+          { href: "/reception/schedule", label: "Agenda", icon: CalendarDays },
+          { href: "/reception/patients", label: "Pacientes", icon: Users },
+          { href: "/reception/checkin", label: "Check-in Rápido", icon: ClipboardList },
         ];
       default:
         return [];
@@ -112,7 +112,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
               onClick={() => logout()}
             >
               <LogOut className="w-4 h-4" />
-              Sign Out
+              Sair
             </Button>
           </div>
         </div>

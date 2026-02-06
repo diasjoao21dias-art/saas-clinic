@@ -91,7 +91,7 @@ export default function AttendPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold font-display flex items-center gap-2">
-              Consultation: <span className="text-primary">{appointment.patient.name}</span>
+              Consulta: <span className="text-primary">{appointment.patient.name}</span>
             </h1>
             <p className="text-muted-foreground text-sm">
               {format(new Date(), 'PPP')} • {appointment.startTime}
@@ -100,11 +100,11 @@ export default function AttendPage() {
           <div className="flex gap-2">
             <Button variant="outline">
               <History className="w-4 h-4 mr-2" />
-              Patient History
+              Histórico do Paciente
             </Button>
             <Button onClick={form.handleSubmit(onSubmit)} className="bg-accent hover:bg-accent/90">
               <CheckCircle className="w-4 h-4 mr-2" />
-              Finish Consultation
+              Finalizar Consulta
             </Button>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function AttendPage() {
                 <div>
                   <CardTitle className="text-lg">{appointment.patient.name}</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {format(new Date(appointment.patient.birthDate), 'dd MMM yyyy')} ({new Date().getFullYear() - new Date(appointment.patient.birthDate).getFullYear()} yrs)
+                    {format(new Date(appointment.patient.birthDate), 'dd MMM yyyy')} ({new Date().getFullYear() - new Date(appointment.patient.birthDate).getFullYear()} anos)
                   </p>
                 </div>
               </div>
@@ -129,10 +129,10 @@ export default function AttendPage() {
             <ScrollArea className="flex-1 p-6">
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Contact Info</h4>
+                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Informações de Contato</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-slate-500">Phone</p>
+                      <p className="text-slate-500">Telefone</p>
                       <p className="font-medium">{appointment.patient.phone || "N/A"}</p>
                     </div>
                     <div>
@@ -145,10 +145,10 @@ export default function AttendPage() {
                 <Separator />
 
                 <div>
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Current Vitals</h4>
+                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Sinais Vitais</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
-                      <p className="text-xs text-blue-600 mb-1">Blood Pressure</p>
+                      <p className="text-xs text-blue-600 mb-1">Pressão Arterial</p>
                       <Input 
                         {...form.register("vitals.bloodPressure")} 
                         className="h-8 bg-white border-blue-200" 
@@ -156,7 +156,7 @@ export default function AttendPage() {
                       />
                     </div>
                     <div className="p-3 rounded-lg bg-red-50 border border-red-100">
-                      <p className="text-xs text-red-600 mb-1">Heart Rate</p>
+                      <p className="text-xs text-red-600 mb-1">Freq. Cardíaca</p>
                       <Input 
                         {...form.register("vitals.heartRate")} 
                         className="h-8 bg-white border-red-200" 
@@ -164,7 +164,7 @@ export default function AttendPage() {
                       />
                     </div>
                     <div className="p-3 rounded-lg bg-orange-50 border border-orange-100">
-                      <p className="text-xs text-orange-600 mb-1">Temperature</p>
+                      <p className="text-xs text-orange-600 mb-1">Temperatura</p>
                       <Input 
                         {...form.register("vitals.temperature")} 
                         className="h-8 bg-white border-orange-200" 
@@ -172,7 +172,7 @@ export default function AttendPage() {
                       />
                     </div>
                     <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <p className="text-xs text-green-600 mb-1">Weight</p>
+                      <p className="text-xs text-green-600 mb-1">Peso</p>
                       <Input 
                         {...form.register("vitals.weight")} 
                         className="h-8 bg-white border-green-200" 
@@ -185,9 +185,9 @@ export default function AttendPage() {
                 <Separator />
 
                 <div>
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Allergies</h4>
+                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Alergias</h4>
                   <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm font-medium border border-red-100">
-                    No known allergies
+                    Sem alergias conhecidas
                   </div>
                 </div>
               </div>
@@ -199,9 +199,9 @@ export default function AttendPage() {
             <Tabs defaultValue="anamnesis" className="h-full flex flex-col">
               <div className="px-6 pt-6 border-b">
                 <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100/50 p-1">
-                  <TabsTrigger value="anamnesis">Anamnesis</TabsTrigger>
-                  <TabsTrigger value="diagnosis">Diagnosis & Plan</TabsTrigger>
-                  <TabsTrigger value="prescription">Prescription</TabsTrigger>
+                  <TabsTrigger value="anamnesis">Anamnese</TabsTrigger>
+                  <TabsTrigger value="diagnosis">Diagnóstico e Plano</TabsTrigger>
+                  <TabsTrigger value="prescription">Receituário</TabsTrigger>
                 </TabsList>
               </div>
 
@@ -213,9 +213,9 @@ export default function AttendPage() {
                       name="chiefComplaint"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Chief Complaint</FormLabel>
+                          <FormLabel className="text-base font-semibold text-slate-900">Queixa Principal</FormLabel>
                           <FormControl>
-                            <Textarea {...field} className="min-h-[100px] text-lg" placeholder="Patient reports..." />
+                            <Textarea {...field} className="min-h-[100px] text-lg" placeholder="O paciente relata..." />
                           </FormControl>
                         </FormItem>
                       )}
@@ -225,9 +225,9 @@ export default function AttendPage() {
                       name="history"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">History of Present Illness</FormLabel>
+                          <FormLabel className="text-base font-semibold text-slate-900">Histórico da Doença Atual</FormLabel>
                           <FormControl>
-                            <Textarea {...field} className="min-h-[200px]" placeholder="Detailed history..." />
+                            <Textarea {...field} className="min-h-[200px]" placeholder="Histórico detalhado..." />
                           </FormControl>
                         </FormItem>
                       )}
@@ -240,9 +240,9 @@ export default function AttendPage() {
                       name="diagnosis"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Diagnosis (ICD-10)</FormLabel>
+                          <FormLabel className="text-base font-semibold text-slate-900">Diagnóstico (CID-10)</FormLabel>
                           <FormControl>
-                            <Input {...field} className="text-lg" placeholder="e.g. J00 Acute nasopharyngitis" />
+                            <Input {...field} className="text-lg" placeholder="ex: J00 Nasofaringite aguda" />
                           </FormControl>
                         </FormItem>
                       )}
@@ -252,9 +252,9 @@ export default function AttendPage() {
                       name="notes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Clinical Evolution Notes</FormLabel>
+                          <FormLabel className="text-base font-semibold text-slate-900">Notas de Evolução Clínica</FormLabel>
                           <FormControl>
-                            <Textarea {...field} className="min-h-[250px]" placeholder="Assessment and plan..." />
+                            <Textarea {...field} className="min-h-[250px]" placeholder="Avaliação e plano..." />
                           </FormControl>
                         </FormItem>
                       )}
@@ -265,7 +265,7 @@ export default function AttendPage() {
                     <div className="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-300">
                       <div className="flex items-center gap-3 mb-4">
                         <FileText className="w-5 h-5 text-primary" />
-                        <h3 className="font-display font-bold text-lg">Electronic Prescription</h3>
+                        <h3 className="font-display font-bold text-lg">Receituário Eletrônico</h3>
                       </div>
                       <FormField
                         control={form.control}
@@ -276,7 +276,7 @@ export default function AttendPage() {
                               <Textarea 
                                 {...field} 
                                 className="min-h-[300px] font-mono text-sm leading-relaxed border-0 bg-transparent focus-visible:ring-0 resize-none" 
-                                placeholder="Rx:&#10;&#10;Amoxicillin 500mg&#10;1 cap PO q8h x 7 days&#10;&#10;Ibuprofen 400mg&#10;1 tab PO q6h prn pain" 
+                                placeholder="Rx:&#10;&#10;Amoxicilina 500mg&#10;1 cápsula via oral a cada 8h por 7 dias&#10;&#10;Ibuprofeno 400mg&#10;1 comprimido via oral a cada 6h em caso de dor" 
                               />
                             </FormControl>
                           </FormItem>
@@ -285,7 +285,7 @@ export default function AttendPage() {
                     </div>
                     <div className="flex justify-end">
                       <Button variant="outline" className="gap-2">
-                        Print Prescription
+                        Imprimir Receita
                       </Button>
                     </div>
                   </TabsContent>

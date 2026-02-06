@@ -25,7 +25,7 @@ export default function DoctorDashboard() {
           <div>
             <h1 className="text-3xl font-display font-bold text-slate-900">Dr. {user?.name}</h1>
             <p className="text-muted-foreground mt-2">
-              You have {appointments?.filter(a => a.status !== 'completed').length} remaining patients today
+              Você tem {appointments?.filter(a => a.status !== 'completed').length} pacientes restantes hoje
             </p>
           </div>
           <div className="flex gap-3">
@@ -33,7 +33,7 @@ export default function DoctorDashboard() {
               <span className="text-muted-foreground">Status:</span>
               <span className="ml-2 font-semibold text-green-600 flex items-center gap-1 inline-flex">
                 <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
-                Available
+                Disponível
               </span>
             </div>
           </div>
@@ -45,16 +45,16 @@ export default function DoctorDashboard() {
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-sm font-medium mb-4">
                   <Clock className="w-4 h-4" />
-                  Next Patient • {nextUp.startTime}
+                  Próximo Paciente • {nextUp.startTime}
                 </div>
                 <h2 className="text-3xl font-bold mb-2">{nextUp.patient.name}</h2>
                 <p className="text-blue-100 opacity-90 max-w-xl">
-                  {nextUp.notes || "No pre-appointment notes available."}
+                  {nextUp.notes || "Sem notas pré-atendimento disponíveis."}
                 </p>
               </div>
               <Link href={`/doctor/attend/${nextUp.id}`}>
                 <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold shadow-lg border-0 h-14 px-8 text-lg rounded-xl">
-                  Start Consultation
+                  Iniciar Consulta
                   <PlayCircle className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
@@ -64,7 +64,7 @@ export default function DoctorDashboard() {
 
         <Card className="border-none shadow-sm">
           <CardHeader>
-            <CardTitle>Today's Schedule</CardTitle>
+            <CardTitle>Agenda de Hoje</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
@@ -82,15 +82,17 @@ export default function DoctorDashboard() {
                         apt.status === 'arrived' ? 'bg-blue-50 text-blue-700 border-blue-200' :
                         'bg-slate-50 text-slate-600'
                       }>
-                        {apt.status}
+                        {apt.status === 'completed' ? 'Concluído' : 
+                         apt.status === 'arrived' ? 'Presente' : 
+                         apt.status === 'scheduled' ? 'Agendado' : apt.status}
                       </Badge>
                     </div>
-                    <p className="text-sm text-slate-500 mt-1">{apt.notes || "Routine Checkup"}</p>
+                    <p className="text-sm text-slate-500 mt-1">{apt.notes || "Consulta de Rotina"}</p>
                   </div>
                   {apt.status !== 'completed' && (
                     <Link href={`/doctor/attend/${apt.id}`}>
                       <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        View
+                        Ver
                       </Button>
                     </Link>
                   )}
@@ -101,7 +103,7 @@ export default function DoctorDashboard() {
               ))}
               {!appointments?.length && (
                 <div className="text-center py-12 text-muted-foreground">
-                  No appointments scheduled for today
+                  Nenhum agendamento para hoje
                 </div>
               )}
             </div>
