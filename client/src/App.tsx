@@ -9,6 +9,7 @@ import LoginPage from "@/pages/login";
 import ReceptionDashboard from "@/pages/reception/dashboard";
 import PatientDirectory from "@/pages/reception/patients";
 import TeamManagement from "@/pages/admin/users";
+import ClinicsManagement from "@/pages/admin/clinics";
 import DoctorDashboard from "@/pages/doctor/dashboard";
 import AttendPage from "@/pages/doctor/attend";
 import NotFound from "@/pages/not-found";
@@ -63,6 +64,9 @@ function Router() {
       </Route>
       <Route path="/admin/users">
         <ProtectedRoute component={TeamManagement} allowedRoles={['admin']} />
+      </Route>
+      <Route path="/admin/clinics">
+        <ProtectedRoute component={ClinicsManagement} allowedRoles={['admin']} />
       </Route>
 
       <Route path="/">
