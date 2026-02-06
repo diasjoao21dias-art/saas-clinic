@@ -1,12 +1,12 @@
 import LayoutShell from "@/components/layout-shell";
-import { usePatients, useCreatePatient } from "@/hooks/use-patients";
+import { usePatients, useCreatePatient, usePatient } from "@/hooks/use-patients";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, User } from "lucide-react";
+import { Search, Plus, User, ArrowLeft, Phone, Mail, Calendar, MapPin, Contact } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +18,10 @@ export default function PatientDirectory() {
   const [search, setSearch] = useState("");
   const { data: patients, isLoading } = usePatients(search);
   const [open, setOpen] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
   const createPatient = useCreatePatient();
+
+  const { data: selectedPatient, isLoading: isLoadingPatient } = usePatient(selectedPatientId || 0);
 
   const form = useForm<z.infer<typeof insertPatientSchema>>({
     resolver: zodResolver(insertPatientSchema),
@@ -30,7 +33,7 @@ export default function PatientDirectory() {
       email: "",
       gender: "",
       address: "",
-      clinicId: 1, // Hardcoded for demo
+      clinicId: 1, 
     }
   });
 
@@ -39,6 +42,84 @@ export default function PatientDirectory() {
     setOpen(false);
     form.reset();
   };
+
+  if (selectedPatientId && selectedPatient) {
+    return (
+      <LayoutShell>
+        <div className="space-y-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => setSelectedPatientId(null)}
+            className="mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar para lista
+          </Button>
+
+          <div className="grid lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-1 border-none shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold">
+                    {selectedPatient.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">{selectedPatient.name}</h2>
+                    <p className="text-muted-foreground capitalize">{selectedPatient.gender || "Gênero não informado"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="lg:col-span-2 border-none shadow-sm">
+              <CardHeader>
+                <CardTitle>Informações Pessoais</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
+                    <Contact className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase font-semibold">CPF</p>
+                      <p className="font-medium">{selectedPatient.cpf || "N/A"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase font-semibold">Nascimento</p>
+                      <p className="font-medium">{format(new Date(selectedPatient.birthDate), 'dd/MM/yyyy')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
+                    <Phone className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase font-semibold">Telefone</p>
+                      <p className="font-medium">{selectedPatient.phone || "N/A"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
+                    <Mail className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase font-semibold">Email</p>
+                      <p className="font-medium">{selectedPatient.email || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
+                  <MapPin className="w-5 h-5 text-primary mt-1" />
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase font-semibold">Endereço</p>
+                    <p className="font-medium">{selectedPatient.address || "Endereço não informado"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </LayoutShell>
+    );
+  }
 
   return (
     <LayoutShell>
@@ -174,7 +255,12 @@ export default function PatientDirectory() {
                     </TableCell>
                     <TableCell>{format(new Date(patient.birthDate), 'dd/MM/yyyy')}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="opacity-0 group-hover:opacity-100"
+                        onClick={() => setSelectedPatientId(patient.id)}
+                      >
                         Ver Detalhes
                       </Button>
                     </TableCell>
