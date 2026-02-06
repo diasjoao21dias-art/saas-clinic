@@ -42,7 +42,7 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       const user = await storage.getUserByUsername(username);
       if (!user) {
-        return done(null, false, { message: "Invalid username" });
+        return done(null, false, { message: "Nome de usuário inválido" });
       }
       
       // For the demo seed users, we are using plain text "password123"
@@ -60,7 +60,7 @@ export function setupAuth(app: Express) {
       // return done(null, user);
 
       // Simple plain text check fallthrough for demo
-      return done(null, false, { message: "Invalid password" });
+      return done(null, false, { message: "Senha inválida" });
     }),
   );
 
@@ -74,7 +74,7 @@ export function setupAuth(app: Express) {
     passport.authenticate("local", (err, user, info) => {
       if (err) return next(err);
       if (!user) {
-        return res.status(401).json({ message: info?.message || "Authentication failed" });
+        return res.status(401).json({ message: info?.message || "Falha na autenticação" });
       }
       req.login(user, (err) => {
         if (err) return next(err);
@@ -94,7 +94,7 @@ export function setupAuth(app: Express) {
     if (req.isAuthenticated()) {
       res.json(req.user);
     } else {
-      res.status(401).json({ message: "Not authenticated" });
+      res.status(401).json({ message: "Não autenticado" });
     }
   });
 }

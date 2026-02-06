@@ -17,7 +17,7 @@ export async function registerRoutes(
   // Middleware to enforce auth
   const requireAuth = (req: any, res: any, next: any) => {
     if (req.isAuthenticated()) return next();
-    res.status(401).json({ message: "Unauthorized" });
+    res.status(401).json({ message: "Não autorizado" });
   };
 
   // === API IMPLEMENTATION ===
@@ -33,7 +33,7 @@ export async function registerRoutes(
 
   app.get(api.users.get.path, requireAuth, async (req, res) => {
     const user = await storage.getUser(Number(req.params.id));
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ message: "Usuário não encontrado" });
     res.json(user);
   });
 
@@ -48,7 +48,7 @@ export async function registerRoutes(
 
   app.get(api.patients.get.path, requireAuth, async (req, res) => {
     const patient = await storage.getPatient(Number(req.params.id));
-    if (!patient) return res.status(404).json({ message: "Patient not found" });
+    if (!patient) return res.status(404).json({ message: "Paciente não encontrado" });
     res.json(patient);
   });
 
@@ -122,7 +122,7 @@ export async function registerRoutes(
 
   app.get(api.medicalRecords.get.path, requireAuth, async (req, res) => {
     const record = await storage.getMedicalRecord(Number(req.params.id));
-    if (!record) return res.status(404).json({ message: "Record not found" });
+    if (!record) return res.status(404).json({ message: "Registro não encontrado" });
     res.json(record);
   });
 
@@ -165,13 +165,13 @@ export async function registerRoutes(
 async function seedDatabase() {
   const existingUser = await storage.getUserByUsername("admin");
   if (!existingUser) {
-    console.log("Seeding database...");
+    console.log("Semeando banco de dados...");
     
     // Create Clinic
     const [clinic] = await db.insert(clinics).values({
-      name: "HealthOne Clinic",
-      address: "123 Medical Blvd",
-      phone: "555-0123",
+      name: "Clínica Saúde Total",
+      address: "Av. Paulista, 1000",
+      phone: "(11) 5555-0123",
       subscriptionStatus: "active"
     }).returning();
 
@@ -179,7 +179,7 @@ async function seedDatabase() {
     await storage.createUser({
       username: "admin",
       password: "password123", // In real app, hash this
-      name: "System Administrator",
+      name: "Administrador do Sistema",
       role: "admin",
       clinicId: clinic.id
     });
@@ -189,26 +189,26 @@ async function seedDatabase() {
       password: "password123",
       name: "Dr. Gregory House",
       role: "doctor",
-      specialty: "Diagnostician",
+      specialty: "Infectologista",
       clinicId: clinic.id
     });
 
     await storage.createUser({
       username: "operator",
       password: "password123",
-      name: "Pam Beesly",
+      name: "Ana Oliveira",
       role: "operator",
       clinicId: clinic.id
     });
 
     // Create Patients
     const patient1 = await storage.createPatient({
-      name: "John Doe",
+      name: "João Silva",
       birthDate: "1980-05-15",
-      phone: "555-5555",
-      email: "john@example.com",
-      gender: "Male",
-      address: "456 Lane",
+      phone: "(11) 98888-7777",
+      email: "joao@exemplo.com",
+      gender: "Masculino",
+      address: "Rua das Flores, 123",
       clinicId: clinic.id,
       cpf: "123.456.789-00"
     });
@@ -221,10 +221,10 @@ async function seedDatabase() {
       date: new Date().toISOString().split('T')[0], // Today
       startTime: "09:00",
       duration: 30,
-      status: "scheduled",
-      notes: "Routine checkup"
+      status: "agendado",
+      notes: "Consulta de rotina"
     });
 
-    console.log("Seeding complete!");
+    console.log("Semeio concluído!");
   }
 }
