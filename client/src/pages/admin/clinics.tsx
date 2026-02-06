@@ -27,7 +27,7 @@ export default function ClinicsManagement() {
         address: "Av. Paulista, 1000",
         phone: "(11) 5555-0123",
         subscriptionStatus: "active",
-        createdAt: new Date().toISOString()
+        createdAt: null
       }
     ]
   });
@@ -72,7 +72,7 @@ export default function ClinicsManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {clinics?.map((clinic) => (
+                {Array.isArray(clinics) && clinics.map((clinic: Clinic) => (
                   <TableRow key={clinic.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-3">
