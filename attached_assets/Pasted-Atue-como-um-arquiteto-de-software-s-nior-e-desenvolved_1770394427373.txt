@@ -1,0 +1,197 @@
+Atue como um arquiteto de software sênior e desenvolvedor full stack especialista em SaaS médico-hospitalar.
+Crie um SaaS completo de Gestão de Clínica, escalável, seguro e pronto para produção, utilizando PostgreSQL como banco de dados principal.
+
+1. VISÃO GERAL DO SISTEMA
+
+Desenvolver um sistema web SaaS para clínicas médicas com múltiplos perfis de usuários, fluxo completo de atendimento ao paciente, desde o agendamento até a consulta médica, incluindo check-in, recepção, anamnese e prontuário.
+
+O sistema NÃO terá acesso direto do paciente. Todo fluxo é operacional (recepção, enfermagem e médico).
+
+2. TECNOLOGIAS OBRIGATÓRIAS
+
+Backend: Node.js (NestJS ou Express) ou Laravel ou Django
+
+Frontend: React + TypeScript (com painel administrativo moderno)
+
+Banco de dados: PostgreSQL
+
+ORM: Prisma / TypeORM / Sequelize
+
+Autenticação: JWT + controle de permissões por perfil
+
+Arquitetura: MVC ou Clean Architecture
+
+API REST ou GraphQL
+
+SaaS multi-tenant (suporte a múltiplas clínicas)
+
+3. PERFIS DE USUÁRIO (RBAC)
+
+Implementar controle de acesso por função:
+
+🔑 ADMIN
+
+Gerenciar clínicas
+
+Gerenciar usuários (operadores, médicos)
+
+Configurar especialidades
+
+Configurar horários de atendimento
+
+Visualizar relatórios financeiros e operacionais
+
+Gerenciar planos e permissões do SaaS
+
+🧑‍💼 OPERADOR / RECEPÇÃO
+
+Criar e editar pacientes
+
+Realizar check-in do paciente
+
+Registrar entrada na recepção
+
+Criar agendamentos
+
+Confirmar presença
+
+Encaminhar paciente para enfermagem/médico
+
+Iniciar ficha de atendimento
+
+👨‍⚕️ MÉDICO
+
+Visualizar agenda do dia
+
+Acessar ficha completa do paciente
+
+Visualizar anamnese já preenchida
+
+Registrar atendimento médico
+
+Evolução clínica
+
+Prescrição
+
+Histórico de consultas
+
+4. MÓDULOS OBRIGATÓRIOS
+📅 AGENDAMENTO
+
+Agendamento por médico, especialidade e horário
+
+Status: agendado, confirmado, check-in realizado, em atendimento, finalizado, cancelado
+
+Evitar conflito de horários
+
+Visualização em calendário
+
+🏥 CHECK-IN E RECEPÇÃO
+
+Tela exclusiva de recepção
+
+Botão de “Dar Entrada”
+
+Registro de horário de chegada
+
+Alteração automática do status do agendamento
+
+Encaminhamento para atendimento
+
+📋 ANAMNESE
+
+Anamnese preenchida pela enfermagem ou operador
+
+Campos configuráveis:
+
+Queixa principal
+
+Histórico médico
+
+Medicamentos
+
+Alergias
+
+Sinais vitais
+
+Anamnese vinculada ao atendimento
+
+Ao médico abrir o atendimento, toda anamnese já deve estar carregada automaticamente na ficha do paciente
+
+🧾 PRONTUÁRIO DO PACIENTE
+
+Histórico completo de consultas
+
+Evolução clínica
+
+Anamnese por atendimento
+
+Prescrições
+
+Observações médicas
+
+💳 CHECKOUT
+
+Registro de finalização do atendimento
+
+Status de atendimento concluído
+
+Registro de pagamento (opcional)
+
+Integração futura com gateways de pagamento
+
+5. BANCO DE DADOS (PostgreSQL)
+
+Modelar tabelas como:
+
+users
+
+roles
+
+clinics
+
+patients
+
+appointments
+
+checkins
+
+anamneses
+
+medical_records
+
+prescriptions
+
+payments
+
+audit_logs
+
+Relacionamentos bem definidos com chaves estrangeiras, índices e integridade referencial.
+
+6. REQUISITOS IMPORTANTES
+
+Sistema seguro (LGPD)
+
+Logs de ações (quem fez o quê e quando)
+
+Interface moderna e intuitiva
+
+Separação clara entre visão Admin, Operador e Médico
+
+Pronto para escalar como SaaS
+
+Código comentado e organizado
+
+7. ENTREGA ESPERADA
+
+Estrutura completa do projeto
+
+Modelagem do banco PostgreSQL
+
+Backend funcional
+
+Frontend com dashboards separados por perfil
+
+API documentada
+
+Fluxo completo de atendimento funcionando de ponta a ponta
