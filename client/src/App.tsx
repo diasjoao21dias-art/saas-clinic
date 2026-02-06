@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import LoginPage from "@/pages/login";
 import ReceptionDashboard from "@/pages/reception/dashboard";
 import PatientDirectory from "@/pages/reception/patients";
+import TeamManagement from "@/pages/admin/users";
 import DoctorDashboard from "@/pages/doctor/dashboard";
 import AttendPage from "@/pages/doctor/attend";
 import NotFound from "@/pages/not-found";
@@ -56,9 +57,12 @@ function Router() {
         <ProtectedRoute component={AttendPage} allowedRoles={['doctor', 'admin']} />
       </Route>
 
-      {/* Admin Routes - reuse reception for demo simplicity */}
+      {/* Admin Routes */}
       <Route path="/admin/dashboard">
         <ProtectedRoute component={ReceptionDashboard} allowedRoles={['admin']} />
+      </Route>
+      <Route path="/admin/users">
+        <ProtectedRoute component={TeamManagement} allowedRoles={['admin']} />
       </Route>
 
       <Route path="/">
