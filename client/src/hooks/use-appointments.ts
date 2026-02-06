@@ -1,0 +1,76 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api, buildUrl, type InsertAppointment } from "@shared/routes";
+import { useToast } from "@/hooks/use-toast";
+
+interface AppointmentFilters {
+  date?: string;
+  doctorId?: number;
+  status?: string;
+}
+
+export function useAppointments(filters?: AppointmentFilters) {
+  return useQuery({
+    queryKey: [api.appointments.list.path, filters],
+    queryFn: async () => {
+      let url = api.appointments.list.path;
+      if (filters) {
+        const params = new URLSearchParams();
+        if (filters.date) params.append("date", filters.date);
+        if (filters.doctorId) params.append("doctorId", filters.doctorId.toString());
+        if (filters.status) params.append("status", filters.status);
+        url += `?${params.toString()}`;
+      }
+      
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch appointments");
+      return api.appointments.list.responses[200].parse(await res.json());
+    },
+  });
+}
+
+export function useCreateAppointment() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (data: InsertAppointment) => {
+      const res = await fetch(api.appointments.create.path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to schedule appointment");
+      return api.appointments.create.responses[201].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.appointments.list.path] });
+      toast({ title: "Success", description: "Appointment scheduled" });
+    },
+  });
+}
+
+export function useUpdateAppointmentStatus() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: number, status: string }) => {
+      const url = buildUrl(api.appointments.updateStatus.path, { id });
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+        credentials: "include",
+      });
+      
+      if (!res.ok) throw new Error("Failed to update status");
+      return api.appointments.updateStatus.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.appointments.list.path] });
+      toast({ title: "Updated", description: "Appointment status changed" });
+    },
+  });
+}
