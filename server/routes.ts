@@ -79,6 +79,8 @@ export async function registerRoutes(
     // @ts-ignore
     const clinicId = req.user!.clinicId;
     const appointments = await storage.getAppointments(clinicId, {
+      startDate: req.query.startDate as string,
+      endDate: req.query.endDate as string,
       date: req.query.date as string,
       doctorId: req.query.doctorId ? Number(req.query.doctorId) : undefined,
       status: req.query.status as string,

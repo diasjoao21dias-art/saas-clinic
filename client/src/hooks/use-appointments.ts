@@ -5,6 +5,8 @@ import type { InsertAppointment } from "@shared/schema";
 
 interface AppointmentFilters {
   date?: string;
+  startDate?: string;
+  endDate?: string;
   doctorId?: number;
   status?: string;
 }
@@ -17,6 +19,8 @@ export function useAppointments(filters?: AppointmentFilters) {
       if (filters) {
         const params = new URLSearchParams();
         if (filters.date) params.append("date", filters.date);
+        if (filters.startDate) params.append("startDate", filters.startDate);
+        if (filters.endDate) params.append("endDate", filters.endDate);
         if (filters.doctorId) params.append("doctorId", filters.doctorId.toString());
         if (filters.status) params.append("status", filters.status);
         url += `?${params.toString()}`;

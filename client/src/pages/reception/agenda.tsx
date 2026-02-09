@@ -26,12 +26,18 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 export default function AgendaPage() {
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [viewRange, setViewRange] = useState({ 
+    start: format(new Date(), 'yyyy-MM-dd'),
+    end: format(new Date(), 'yyyy-MM-dd')
+  });
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | undefined>();
   const [editingAppointment, setEditingAppointment] = useState<AppointmentWithDetails | null>(null);
   const [isAptDialogOpen, setIsAptDialogOpen] = useState(false);
   
-  const { data: allAppointments } = useAppointments({ date: selectedDate });
+  const { data: allAppointments } = useAppointments({ 
+    startDate: viewRange.start, 
+    endDate: viewRange.end 
+  });
   const { data: patients } = usePatients();
   const { data: doctors } = useQuery<User[]>({ 
     queryKey: [api.users.list.path, { role: 'doctor' }],
@@ -103,7 +109,7 @@ export default function AgendaPage() {
       aptForm.reset({
         patientId: 0,
         doctorId: 0,
-        date: selectedDate,
+        date: format(new Date(), 'yyyy-MM-dd'),
         startTime: "09:00",
         duration: 30,
         status: "agendado",
@@ -111,7 +117,7 @@ export default function AgendaPage() {
         clinicId: 1
       });
     }
-  }, [editingAppointment, selectedDate]);
+  }, [editingAppointment]);
 
   const onAptSubmit = async (data: any) => {
     try {
@@ -177,7 +183,7 @@ export default function AgendaPage() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
-            title="Agendamentos Hoje" 
+            title="Agendamentos no Período" 
             value={allAppointments?.length || 0} 
             icon={Calendar} 
             color="primary"
@@ -227,7 +233,10 @@ export default function AgendaPage() {
                 height="auto"
                 nowIndicator={true}
                 datesSet={(arg) => {
-                  setSelectedDate(format(arg.start, 'yyyy-MM-dd'));
+                  setViewRange({
+                    start: format(arg.start, 'yyyy-MM-dd'),
+                    end: format(arg.end, 'yyyy-MM-dd')
+                  });
                 }}
                 eventClick={(info) => {
                   setEditingAppointment(info.event.extendedProps.appointment);

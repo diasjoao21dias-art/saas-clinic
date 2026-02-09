@@ -89,10 +89,16 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getAppointments(clinicId: number, filters?: { date?: string; doctorId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]> {
+  async getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]> {
     const conditions = [eq(appointments.clinicId, clinicId), sql`${appointments.status} != 'cancelado'`];
     
-    if (filters?.date) conditions.push(eq(appointments.date, filters.date));
+    if (filters?.date) {
+      conditions.push(eq(appointments.date, filters.date));
+    } else if (filters?.startDate && filters?.endDate) {
+      conditions.push(sql`${appointments.date} >= ${filters.startDate}`);
+      conditions.push(sql`${appointments.date} <= ${filters.endDate}`);
+    }
+    
     if (filters?.doctorId) conditions.push(eq(appointments.doctorId, filters.doctorId));
     if (filters?.status) conditions.push(eq(appointments.status, filters.status));
 
