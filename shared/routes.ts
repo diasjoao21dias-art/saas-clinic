@@ -158,7 +158,11 @@ export const api = {
     updateStatus: {
       method: 'PATCH' as const,
       path: '/api/appointments/:id/status',
-      input: z.object({ status: z.string() }),
+      input: z.object({ 
+        status: z.string(),
+        paymentMethod: z.string().optional(),
+        paymentStatus: z.string().optional(),
+      }),
       responses: {
         200: z.custom<typeof appointments.$inferSelect>(),
         404: errorSchemas.notFound,

@@ -201,7 +201,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord> {
-    const [newRecord] = await db.insert(medicalRecords).values(record).returning();
+    const [newRecord] = await db.insert(medicalRecords).values(record as any).returning();
     return newRecord;
   }
 

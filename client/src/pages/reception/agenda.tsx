@@ -89,9 +89,46 @@ export default function AgendaPage() {
       toast({ title: "Agenda atualizada", description: "Disponibilidade alterada com sucesso." });
     }
   });
-  
+
   const { toast } = useToast();
   const createAppointment = useCreateAppointment();
+  const [selectedAppointmentForCheckin, setSelectedAppointmentForCheckin] = useState<AppointmentWithDetails | null>(null);
+  const [isCheckinDialogOpen, setIsCheckinDialogOpen] = useState(false);
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status, paymentMethod, paymentStatus }: any) => {
+      const res = await apiRequest("PATCH", `/api/appointments/${id}/status`, { 
+        status, 
+        paymentMethod, 
+        paymentStatus 
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.appointments.list.path] });
+      toast({ title: "Sucesso", description: "Status do agendamento atualizado" });
+      setIsCheckinDialogOpen(false);
+      setSelectedAppointmentForCheckin(null);
+    }
+  });
+
+  const checkinForm = useForm({
+    defaultValues: {
+      paymentMethod: "dinheiro",
+      paymentStatus: "pendente",
+      confirmData: false
+    }
+  });
+
+  const onCheckinSubmit = (data: any) => {
+    if (!selectedAppointmentForCheckin) return;
+    updateStatusMutation.mutate({
+      id: selectedAppointmentForCheckin.id,
+      status: "presente",
+      paymentMethod: data.paymentMethod,
+      paymentStatus: data.paymentStatus
+    });
+  };
 
   const updateAppointment = useMutation({
     mutationFn: async (data: any) => {
@@ -311,8 +348,14 @@ export default function AgendaPage() {
                   });
                 }}
                 eventClick={(info) => {
-                  setEditingAppointment(info.event.extendedProps.appointment);
-                  setIsAptDialogOpen(true);
+                  const apt = info.event.extendedProps.appointment;
+                  if (apt.status === 'confirmado') {
+                    setSelectedAppointmentForCheckin(apt);
+                    setIsCheckinDialogOpen(true);
+                  } else {
+                    setEditingAppointment(apt);
+                    setIsAptDialogOpen(true);
+                  }
                 }}
                 dateClick={(info) => {
                   const dateStr = info.dateStr.split('T')[0];
@@ -350,6 +393,74 @@ export default function AgendaPage() {
         </Card>
       </div>
 
+      <Dialog open={isCheckinDialogOpen} onOpenChange={setIsCheckinDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Check-in do Paciente</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-slate-50 p-4 rounded-md space-y-2">
+              <p className="text-sm font-medium">Paciente: <span className="font-bold">{selectedAppointmentForCheckin?.patient.name}</span></p>
+              <p className="text-sm">CPF: {selectedAppointmentForCheckin?.patient.cpf || 'Não informado'}</p>
+              <p className="text-sm">Telefone: {selectedAppointmentForCheckin?.patient.phone || 'Não informado'}</p>
+            </div>
+            
+            <Form {...checkinForm}>
+              <form onSubmit={checkinForm.handleSubmit(onCheckinSubmit)} className="space-y-4">
+                <FormField
+                  control={checkinForm.control}
+                  name="paymentMethod"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma de Pagamento</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o pagamento" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                          <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                          <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                          <SelectItem value="pix">PIX</SelectItem>
+                          <SelectItem value="convenio">Convênio</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={checkinForm.control}
+                  name="paymentStatus"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status do Pagamento</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Status do pagamento" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pendente">Pendente</SelectItem>
+                          <SelectItem value="pago">Pago</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <Button type="submit" className="w-full" disabled={updateStatusMutation.isPending}>
+                  Confirmar Dados e Check-in
+                </Button>
+              </form>
+            </Form>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       <Dialog open={isAptDialogOpen} onOpenChange={setIsAptDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -438,6 +549,45 @@ export default function AgendaPage() {
                       </FormItem>
                     );
                   }}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={aptForm.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="agendado">Agendado</SelectItem>
+                          <SelectItem value="confirmado">Confirmado</SelectItem>
+                          <SelectItem value="presente">Presente</SelectItem>
+                          <SelectItem value="remarcado">Remarcado</SelectItem>
+                          <SelectItem value="ausente">Faltou</SelectItem>
+                          <SelectItem value="cancelado">Cancelado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={aptForm.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Duração (min)</FormLabel>
+                      <FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
               
