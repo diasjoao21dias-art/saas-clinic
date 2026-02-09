@@ -24,7 +24,12 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function ReceptionDashboard() {
   const today = format(new Date(), 'yyyy-MM-dd');
-  const { data: appointments } = useAppointments({ date: today });
+  const { data: allAppointments } = useAppointments({ date: today });
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | undefined>();
+  const { data: appointments } = useAppointments({ 
+    date: today,
+    doctorId: selectedDoctorId 
+  });
   const { data: patients } = usePatients();
   const { data: doctors } = useQuery<User[]>({ 
     queryKey: [api.users.list.path, { role: 'doctor' }],
@@ -64,8 +69,8 @@ export default function ReceptionDashboard() {
     }
   };
 
-  const totalToday = appointments?.length || 0;
-  const pending = appointments?.filter(a => a.status === 'agendado').length || 0;
+  const totalToday = allAppointments?.length || 0;
+  const pending = allAppointments?.filter(a => a.status === 'agendado').length || 0;
 
   return (
     <LayoutShell>
@@ -105,14 +110,32 @@ export default function ReceptionDashboard() {
         <div className="grid lg:grid-cols-3 gap-8">
           <Card className="lg:col-span-2 border-none shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between gap-4">
-              <CardTitle>Próximos Agendamentos</CardTitle>
-              <Link href="/reception/patients">
-                <Button variant="outline" size="sm" data-testid="link-full-agenda">Ver Agenda Completa</Button>
-              </Link>
+              <div className="flex flex-col gap-1">
+                <CardTitle>Agenda do Dia</CardTitle>
+                <div className="flex items-center gap-2 mt-2">
+                  <Select 
+                    onValueChange={(v) => setSelectedDoctorId(v === "all" ? undefined : Number(v))} 
+                    value={selectedDoctorId?.toString() || "all"}
+                  >
+                    <SelectTrigger className="w-[200px] h-8 text-xs">
+                      <SelectValue placeholder="Todos os Médicos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Médicos</SelectItem>
+                      {doctors?.map(d => (
+                        <SelectItem key={d.id} value={d.id.toString()}>Dr. {d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setIsAptDialogOpen(true)}>
+                <CalendarDays className="w-4 h-4 mr-2" /> Agendar
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {appointments?.slice(0, 5).map((apt) => (
+                {appointments?.sort((a, b) => a.startTime.localeCompare(b.startTime)).map((apt) => (
                   <div key={apt.id} className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center font-bold text-primary">
@@ -205,7 +228,13 @@ export default function ReceptionDashboard() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Médico</FormLabel>
-                    <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value?.toString()}>
+                    <Select 
+                      onValueChange={(v) => {
+                        field.onChange(Number(v));
+                        aptForm.trigger("date");
+                      }} 
+                      value={field.value?.toString()}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione um médico" />
@@ -221,6 +250,25 @@ export default function ReceptionDashboard() {
                   </FormItem>
                 )}
               />
+
+              {aptForm.watch("doctorId") > 0 && aptForm.watch("date") && (
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Horários Ocupados</p>
+                  <div className="flex flex-wrap gap-2">
+                    {allAppointments
+                      ?.filter(a => a.doctorId === aptForm.watch("doctorId") && a.date === aptForm.watch("date"))
+                      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                      .map(a => (
+                        <Badge key={a.id} variant="outline" className="bg-white">
+                          <Clock className="w-3 h-3 mr-1" /> {a.startTime}
+                        </Badge>
+                      ))}
+                    {!allAppointments?.some(a => a.doctorId === aptForm.watch("doctorId") && a.date === aptForm.watch("date")) && (
+                      <p className="text-xs text-slate-400 italic">Nenhum horário agendado</p>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={aptForm.control}
