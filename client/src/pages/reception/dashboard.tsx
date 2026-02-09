@@ -65,7 +65,7 @@ export default function ReceptionDashboard() {
             <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-4">
               <CardTitle className="text-xl font-bold">Próximas Consultas</CardTitle>
               <Link href="/reception/schedule">
-                <a className="text-sm text-primary hover:underline font-medium">Ver Agenda Completa</a>
+                <span className="text-sm text-primary hover:underline font-medium cursor-pointer">Ver Agenda Completa</span>
               </Link>
             </CardHeader>
             <CardContent>

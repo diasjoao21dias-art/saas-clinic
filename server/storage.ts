@@ -26,6 +26,7 @@ export interface IStorage {
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: number, appointment: Partial<InsertAppointment>): Promise<Appointment>;
   updateAppointmentStatus(id: number, status: string): Promise<Appointment>;
+  deleteAppointment(id: number): Promise<void>;
 
   // Medical Records
   getMedicalRecords(patientId: number): Promise<(MedicalRecord & { doctor: User })[]>;
@@ -89,7 +90,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAppointments(clinicId: number, filters?: { date?: string; doctorId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]> {
-    const conditions = [eq(appointments.clinicId, clinicId)];
+    const conditions = [eq(appointments.clinicId, clinicId), sql`${appointments.status} != 'cancelado'`];
     
     if (filters?.date) conditions.push(eq(appointments.date, filters.date));
     if (filters?.doctorId) conditions.push(eq(appointments.doctorId, filters.doctorId));
@@ -116,6 +117,10 @@ export class DatabaseStorage implements IStorage {
   async getAppointment(id: number): Promise<Appointment | undefined> {
     const [appointment] = await db.select().from(appointments).where(eq(appointments.id, id));
     return appointment;
+  }
+
+  async deleteAppointment(id: number): Promise<void> {
+    await db.delete(appointments).where(eq(appointments.id, id));
   }
 
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
@@ -160,6 +165,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMedicalRecord(id: number, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
+    // @ts-ignore - vitals type mismatch in drizzle-zod vs drizzle-orm
     const [updated] = await db.update(medicalRecords).set(record).where(eq(medicalRecords.id, id)).returning();
     return updated;
   }

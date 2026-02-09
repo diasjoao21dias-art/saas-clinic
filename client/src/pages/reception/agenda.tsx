@@ -1,23 +1,24 @@
 import LayoutShell from "@/components/layout-shell";
-import { Calendar, Users, Clock, AlertCircle, Plus } from "lucide-react";
+import { Calendar, Users, Clock, AlertCircle, Plus, Trash2, Edit2 } from "lucide-react";
 import { useAppointments } from "@/hooks/use-appointments";
 import { format, addMinutes, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertAppointmentSchema, type User } from "@shared/schema";
+import { insertAppointmentSchema, type User, type AppointmentWithDetails } from "@shared/schema";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePatients } from "@/hooks/use-patients";
 import { useCreateAppointment } from "@/hooks/use-appointments";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 import { StatCard } from "@/components/stat-card";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -27,6 +28,8 @@ import interactionPlugin from '@fullcalendar/interaction';
 export default function AgendaPage() {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | undefined>();
+  const [editingAppointment, setEditingAppointment] = useState<AppointmentWithDetails | null>(null);
+  const [isAptDialogOpen, setIsAptDialogOpen] = useState(false);
   
   const { data: allAppointments } = useAppointments({ date: selectedDate });
   const { data: patients } = usePatients();
@@ -39,9 +42,36 @@ export default function AgendaPage() {
     }
   });
   
-  const [isAptDialogOpen, setIsAptDialogOpen] = useState(false);
   const { toast } = useToast();
   const createAppointment = useCreateAppointment();
+
+  const updateAppointment = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("PUT", `/api/appointments/${editingAppointment?.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.appointments.list.path] });
+      toast({ title: "Sucesso", description: "Agendamento atualizado" });
+      setIsAptDialogOpen(false);
+      setEditingAppointment(null);
+    },
+    onError: (error: any) => {
+      toast({ title: "Erro", description: error.message || "Falha ao atualizar agendamento", variant: "destructive" });
+    }
+  });
+
+  const deleteAppointment = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/appointments/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.appointments.list.path] });
+      toast({ title: "Sucesso", description: "Agendamento excluído" });
+      setIsAptDialogOpen(false);
+      setEditingAppointment(null);
+    }
+  });
 
   const aptForm = useForm({
     resolver: zodResolver(insertAppointmentSchema),
@@ -57,13 +87,43 @@ export default function AgendaPage() {
     }
   });
 
+  useEffect(() => {
+    if (editingAppointment) {
+      aptForm.reset({
+        patientId: editingAppointment.patientId,
+        doctorId: editingAppointment.doctorId,
+        date: editingAppointment.date,
+        startTime: editingAppointment.startTime,
+        duration: editingAppointment.duration,
+        status: editingAppointment.status,
+        notes: editingAppointment.notes || "",
+        clinicId: editingAppointment.clinicId
+      });
+    } else {
+      aptForm.reset({
+        patientId: 0,
+        doctorId: 0,
+        date: selectedDate,
+        startTime: "09:00",
+        duration: 30,
+        status: "agendado",
+        notes: "",
+        clinicId: 1
+      });
+    }
+  }, [editingAppointment, selectedDate]);
+
   const onAptSubmit = async (data: any) => {
     try {
-      await createAppointment.mutateAsync(data);
-      setIsAptDialogOpen(false);
+      if (editingAppointment) {
+        await updateAppointment.mutateAsync(data);
+      } else {
+        await createAppointment.mutateAsync(data);
+        setIsAptDialogOpen(false);
+      }
       aptForm.reset();
-    } catch (error) {
-      toast({ title: "Erro", description: "Falha ao agendar consulta", variant: "destructive" });
+    } catch (error: any) {
+      // Error handled by mutation onError
     }
   };
 
@@ -78,12 +138,12 @@ export default function AgendaPage() {
       start: startStr,
       end: format(endDate, "yyyy-MM-dd'T'HH:mm:ss"),
       backgroundColor: apt.status === 'completed' ? '#10b981' : '#3b82f6',
-      extendedProps: { doctorId: apt.doctorId }
+      extendedProps: { appointment: apt }
     };
   }) || [];
 
   const filteredEvents = selectedDoctorId 
-    ? calendarEvents.filter(e => e.extendedProps.doctorId === selectedDoctorId)
+    ? calendarEvents.filter(e => e.extendedProps.appointment.doctorId === selectedDoctorId)
     : calendarEvents;
 
   return (
@@ -109,7 +169,7 @@ export default function AgendaPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={() => setIsAptDialogOpen(true)} className="gap-2">
+            <Button onClick={() => { setEditingAppointment(null); setIsAptDialogOpen(true); }} className="gap-2">
               <Plus className="w-4 h-4" /> Agendar Consulta
             </Button>
           </div>
@@ -170,7 +230,22 @@ export default function AgendaPage() {
                   setSelectedDate(format(arg.start, 'yyyy-MM-dd'));
                 }}
                 eventClick={(info) => {
-                  toast({ title: "Agendamento", description: info.event.title });
+                  setEditingAppointment(info.event.extendedProps.appointment);
+                  setIsAptDialogOpen(true);
+                }}
+                dateClick={(info) => {
+                  setEditingAppointment(null);
+                  aptForm.reset({
+                    patientId: 0,
+                    doctorId: selectedDoctorId || 0,
+                    date: info.dateStr.split('T')[0],
+                    startTime: info.dateStr.split('T')[1]?.substring(0, 5) || "09:00",
+                    duration: 30,
+                    status: "agendado",
+                    notes: "",
+                    clinicId: 1
+                  });
+                  setIsAptDialogOpen(true);
                 }}
               />
             </div>
@@ -181,7 +256,7 @@ export default function AgendaPage() {
       <Dialog open={isAptDialogOpen} onOpenChange={setIsAptDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Novo Agendamento</DialogTitle>
+            <DialogTitle>{editingAppointment ? "Editar Agendamento" : "Novo Agendamento"}</DialogTitle>
           </DialogHeader>
           <Form {...aptForm}>
             <form onSubmit={aptForm.handleSubmit(onAptSubmit)} className="space-y-4">
@@ -253,9 +328,26 @@ export default function AgendaPage() {
                   )}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={createAppointment.isPending}>
-                {createAppointment.isPending ? "Processando..." : "Confirmar Agendamento"}
-              </Button>
+              
+              <div className="flex gap-2 pt-4">
+                {editingAppointment && (
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    className="flex-1 gap-2"
+                    onClick={() => {
+                      if (confirm("Tem certeza que deseja excluir este agendamento?")) {
+                        deleteAppointment.mutate(editingAppointment.id);
+                      }
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" /> Excluir
+                  </Button>
+                )}
+                <Button type="submit" className="flex-[2]" disabled={createAppointment.isPending || updateAppointment.isPending}>
+                  {(createAppointment.isPending || updateAppointment.isPending) ? "Processando..." : (editingAppointment ? "Salvar Alterações" : "Confirmar Agendamento")}
+                </Button>
+              </div>
             </form>
           </Form>
         </DialogContent>

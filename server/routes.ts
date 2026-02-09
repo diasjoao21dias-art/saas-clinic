@@ -89,10 +89,23 @@ export async function registerRoutes(
   app.post(api.appointments.create.path, requireAuth, async (req, res) => {
     try {
       const input = api.appointments.create.input.parse(req.body);
+      // @ts-ignore
+      const clinicId = req.user!.clinicId;
+
+      // Check for overlapping appointments
+      const existing = await storage.getAppointments(clinicId, {
+        date: input.date,
+        doctorId: input.doctorId
+      });
+
+      const hasConflict = existing.some(apt => apt.startTime === input.startTime);
+      if (hasConflict) {
+        return res.status(400).json({ message: "Este horário já está ocupado para este médico." });
+      }
+
       const appointment = await storage.createAppointment({
         ...input,
-        // @ts-ignore
-        clinicId: req.user!.clinicId,
+        clinicId,
       });
       res.status(201).json(appointment);
     } catch (err) {
@@ -104,8 +117,38 @@ export async function registerRoutes(
   });
 
   app.put(api.appointments.update.path, requireAuth, async (req, res) => {
-    const updated = await storage.updateAppointment(Number(req.params.id), req.body);
-    res.json(updated);
+    try {
+      const id = Number(req.params.id);
+      const input = req.body;
+      // @ts-ignore
+      const clinicId = req.user!.clinicId;
+
+      if (input.startTime || input.date || input.doctorId) {
+        const existing = await storage.getAppointments(clinicId, {
+          date: input.date,
+          doctorId: input.doctorId
+        });
+
+        const hasConflict = existing.some(apt => apt.id !== id && apt.startTime === input.startTime);
+        if (hasConflict) {
+          return res.status(400).json({ message: "Este horário já está ocupado para este médico." });
+        }
+      }
+
+      const updated = await storage.updateAppointment(id, input);
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao atualizar agendamento" });
+    }
+  });
+
+  app.delete("/api/appointments/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteAppointment(Number(req.params.id));
+      res.sendStatus(204);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao excluir agendamento" });
+    }
   });
 
   app.patch(api.appointments.updateStatus.path, requireAuth, async (req, res) => {
