@@ -94,6 +94,12 @@ export async function registerRoutes(
       // @ts-ignore
       const clinicId = req.user!.clinicId;
 
+      // Check doctor availability for the date
+      const isAvailable = await storage.checkAvailability(clinicId, input.doctorId, input.date);
+      if (!isAvailable) {
+        return res.status(400).json({ message: "A agenda deste médico está fechada para esta data." });
+      }
+
       const duration = input.duration || 30;
       const startTime = input.startTime;
       const [startHour, startMin] = startTime.split(':').map(Number);
@@ -195,6 +201,43 @@ export async function registerRoutes(
     res.json(updated);
   });
 
+  // Availability Exceptions
+  app.get("/api/availability-exceptions", requireAuth, async (req, res) => {
+    try {
+      // @ts-ignore
+      const clinicId = req.user!.clinicId;
+      const doctorId = req.query.doctorId ? Number(req.query.doctorId) : undefined;
+      const date = req.query.date as string | undefined;
+      const exceptions = await storage.getAvailabilityExceptions(clinicId, doctorId, date);
+      res.json(exceptions);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao buscar disponibilidade" });
+    }
+  });
+
+  app.post("/api/availability-exceptions", requireAuth, async (req, res) => {
+    try {
+      // @ts-ignore
+      const clinicId = req.user!.clinicId;
+      const exception = await storage.createAvailabilityException({
+        ...req.body,
+        clinicId,
+      });
+      res.status(201).json(exception);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao criar exceção de disponibilidade" });
+    }
+  });
+
+  app.delete("/api/availability-exceptions/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteAvailabilityException(Number(req.params.id));
+      res.sendStatus(204);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao excluir exceção de disponibilidade" });
+    }
+  });
+
   // Medical Records
   app.get(api.medicalRecords.listByPatient.path, requireAuth, async (req, res) => {
     const records = await storage.getMedicalRecords(Number(req.params.patientId));
@@ -220,7 +263,7 @@ export async function registerRoutes(
       
       // Auto-update appointment status to completed if record is created
       if (input.appointmentId) {
-        await storage.updateAppointmentStatus(input.appointmentId, 'completed');
+        await storage.updateAppointmentStatus(input.appointmentId, 'finalizado');
       }
 
       res.status(201).json(record);

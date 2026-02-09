@@ -79,6 +79,16 @@ export const medicalRecords = pgTable("medical_records", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const availabilityExceptions = pgTable("availability_exceptions", {
+  id: serial("id").primaryKey(),
+  doctorId: integer("doctor_id").references(() => users.id).notNull(),
+  clinicId: integer("clinic_id").references(() => clinics.id).notNull(),
+  date: text("date").notNull(),
+  isAvailable: boolean("is_available").default(false).notNull(),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // === RELATIONS ===
 
 export const clinicsRelations = relations(clinics, ({ many }) => ({
@@ -144,6 +154,7 @@ export const insertUserSchema = createInsertSchema(users).omit({ id: true, creat
 export const insertPatientSchema = createInsertSchema(patients).omit({ id: true, createdAt: true });
 export const insertAppointmentSchema = createInsertSchema(appointments).omit({ id: true, createdAt: true });
 export const insertMedicalRecordSchema = createInsertSchema(medicalRecords).omit({ id: true, createdAt: true });
+export const insertAvailabilityExceptionSchema = createInsertSchema(availabilityExceptions).omit({ id: true, createdAt: true });
 
 // === EXPLICIT TYPES ===
 
@@ -152,6 +163,8 @@ export type User = typeof users.$inferSelect;
 export type Patient = typeof patients.$inferSelect;
 export type Appointment = typeof appointments.$inferSelect;
 export type MedicalRecord = typeof medicalRecords.$inferSelect;
+export type AvailabilityException = typeof availabilityExceptions.$inferSelect;
+export type InsertAvailabilityException = z.infer<typeof insertAvailabilityExceptionSchema>;
 
 export type InsertClinic = z.infer<typeof insertClinicSchema>;
 export type InsertUser = z.infer<typeof insertUserSchema>;

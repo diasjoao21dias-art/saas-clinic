@@ -34,10 +34,22 @@ export default function AgendaPage() {
   const [editingAppointment, setEditingAppointment] = useState<AppointmentWithDetails | null>(null);
   const [isAptDialogOpen, setIsAptDialogOpen] = useState(false);
   
-  const { data: allAppointments } = useAppointments({ 
+  const { data: allAppointments, isLoading: isLoadingAppointments } = useAppointments({ 
     startDate: viewRange.start, 
     endDate: viewRange.end 
   });
+  
+  const getUnavailableTimes = (date: string, doctorId: number) => {
+    if (!allAppointments) return [];
+    return allAppointments
+      .filter(apt => apt.date === date && apt.doctorId === doctorId && apt.status !== 'cancelado')
+      .map(apt => apt.startTime);
+  };
+
+  const isTimeSlotOccupied = (time: string, date: string, doctorId: number) => {
+    const unavailable = getUnavailableTimes(date, doctorId);
+    return unavailable.includes(time);
+  };
   const { data: patients } = usePatients();
   const { data: doctors } = useQuery<User[]>({ 
     queryKey: [api.users.list.path, { role: 'doctor' }],
@@ -45,6 +57,36 @@ export default function AgendaPage() {
       const res = await fetch(`${api.users.list.path}?role=doctor`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch doctors");
       return res.json();
+    }
+  });
+
+  const { data: availabilityExceptions } = useQuery<any[]>({
+    queryKey: ["/api/availability-exceptions", selectedDoctorId],
+    queryFn: async () => {
+      const url = selectedDoctorId 
+        ? `/api/availability-exceptions?doctorId=${selectedDoctorId}`
+        : "/api/availability-exceptions";
+      const res = await fetch(url, { credentials: "include" });
+      return res.json();
+    }
+  });
+
+  const toggleAvailability = useMutation({
+    mutationFn: async ({ doctorId, date, isAvailable }: any) => {
+      if (isAvailable) {
+        // If we are making it available, we find the exception (which was blocking it) and delete it
+        const ex = availabilityExceptions?.find(e => e.doctorId === doctorId && e.date === date);
+        if (ex) {
+          await apiRequest("DELETE", `/api/availability-exceptions/${ex.id}`);
+        }
+      } else {
+        // Blocking it
+        await apiRequest("POST", "/api/availability-exceptions", { doctorId, date, isAvailable: false });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/availability-exceptions"] });
+      toast({ title: "Agenda atualizada", description: "Disponibilidade alterada com sucesso." });
     }
   });
   
@@ -182,6 +224,23 @@ export default function AgendaPage() {
             <Button onClick={() => { setEditingAppointment(null); setIsAptDialogOpen(true); }} className="gap-2">
               <Plus className="w-4 h-4" /> Agendar Consulta
             </Button>
+            {selectedDoctorId && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  const today = format(new Date(), 'yyyy-MM-dd');
+                  const isCurrentlyBlocked = availabilityExceptions?.some(ex => ex.doctorId === selectedDoctorId && ex.date === today && !ex.isAvailable);
+                  toggleAvailability.mutate({ 
+                    doctorId: selectedDoctorId, 
+                    date: today, 
+                    isAvailable: isCurrentlyBlocked 
+                  });
+                }}
+                className={availabilityExceptions?.some(ex => ex.doctorId === selectedDoctorId && ex.date === format(new Date(), 'yyyy-MM-dd') && !ex.isAvailable) ? "border-destructive text-destructive" : ""}
+              >
+                {availabilityExceptions?.some(ex => ex.doctorId === selectedDoctorId && ex.date === format(new Date(), 'yyyy-MM-dd') && !ex.isAvailable) ? "Abrir Agenda (Hoje)" : "Fechar Agenda (Hoje)"}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -236,6 +295,15 @@ export default function AgendaPage() {
                 allDaySlot={false}
                 height="auto"
                 nowIndicator={true}
+                dayCellClassNames={(arg) => {
+                  const dateStr = format(arg.date, 'yyyy-MM-dd');
+                  const isBlocked = availabilityExceptions?.some(ex => 
+                    ex.date === dateStr && 
+                    (!selectedDoctorId || ex.doctorId === selectedDoctorId) &&
+                    !ex.isAvailable
+                  );
+                  return isBlocked ? 'bg-slate-100 opacity-60 cursor-not-allowed blocked-day' : '';
+                }}
                 datesSet={(arg) => {
                   setViewRange({
                     start: format(arg.start, 'yyyy-MM-dd'),
@@ -247,6 +315,22 @@ export default function AgendaPage() {
                   setIsAptDialogOpen(true);
                 }}
                 dateClick={(info) => {
+                  const dateStr = info.dateStr.split('T')[0];
+                  const isBlocked = availabilityExceptions?.some(ex => 
+                    ex.date === dateStr && 
+                    (!selectedDoctorId || ex.doctorId === selectedDoctorId) &&
+                    !ex.isAvailable
+                  );
+
+                  if (isBlocked) {
+                    toast({ 
+                      title: "Agenda Fechada", 
+                      description: "Esta data está bloqueada para agendamentos.",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+
                   setEditingAppointment(null);
                   aptForm.reset({
                     patientId: 0,
@@ -332,13 +416,28 @@ export default function AgendaPage() {
                 <FormField
                   control={aptForm.control}
                   name="startTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Horário</FormLabel>
-                      <FormControl><Input type="time" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const selectedDate = aptForm.watch("date");
+                    const selectedDoctor = aptForm.watch("doctorId");
+                    const isOccupied = isTimeSlotOccupied(field.value, selectedDate, selectedDoctor);
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel className="flex justify-between items-center">
+                          Horário 
+                          {isOccupied && <span className="text-[10px] text-destructive font-bold uppercase">Indisponível</span>}
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="time" 
+                            {...field} 
+                            className={isOccupied ? "border-destructive text-destructive" : ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </div>
               
@@ -372,6 +471,7 @@ export default function AgendaPage() {
         .fc .fc-col-header-cell-cushion { padding: 8px; color: #64748b; font-weight: 600; font-size: 0.875rem; }
         .fc-timegrid-slot { height: 3rem !important; border-bottom: 1px solid #f1f5f9 !important; }
         .fc-event { border-radius: 6px; border: none; padding: 2px 4px; font-size: 0.75rem; cursor: pointer; }
+        .blocked-day { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px); }
       `}</style>
     </LayoutShell>
   );

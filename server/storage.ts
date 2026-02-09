@@ -1,9 +1,9 @@
 import { db } from "./db";
 import { 
-  users, patients, appointments, medicalRecords, clinics,
+  users, patients, appointments, medicalRecords, clinics, availabilityExceptions,
   type User, type InsertUser, type Patient, type InsertPatient,
   type Appointment, type InsertAppointment, type MedicalRecord, type InsertMedicalRecord,
-  type Clinic
+  type Clinic, type AvailabilityException, type InsertAvailabilityException
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
@@ -27,6 +27,12 @@ export interface IStorage {
   updateAppointment(id: number, appointment: Partial<InsertAppointment>): Promise<Appointment>;
   updateAppointmentStatus(id: number, status: string): Promise<Appointment>;
   deleteAppointment(id: number): Promise<void>;
+
+  // Availability
+  getAvailabilityExceptions(clinicId: number, doctorId?: number, date?: string): Promise<AvailabilityException[]>;
+  createAvailabilityException(exception: InsertAvailabilityException): Promise<AvailabilityException>;
+  deleteAvailabilityException(id: number): Promise<void>;
+  checkAvailability(clinicId: number, doctorId: number, date: string): Promise<boolean>;
 
   // Medical Records
   getMedicalRecords(patientId: number): Promise<(MedicalRecord & { doctor: User })[]>;
@@ -144,6 +150,31 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async getAvailabilityExceptions(clinicId: number, doctorId?: number, date?: string): Promise<AvailabilityException[]> {
+    const conditions = [eq(availabilityExceptions.clinicId, clinicId)];
+    if (doctorId) conditions.push(eq(availabilityExceptions.doctorId, doctorId));
+    if (date) conditions.push(eq(availabilityExceptions.date, date));
+    return await db.select().from(availabilityExceptions).where(and(...conditions));
+  }
+
+  async createAvailabilityException(exception: InsertAvailabilityException): Promise<AvailabilityException> {
+    const [newEx] = await db.insert(availabilityExceptions).values(exception).returning();
+    return newEx;
+  }
+
+  async deleteAvailabilityException(id: number): Promise<void> {
+    await db.delete(availabilityExceptions).where(eq(availabilityExceptions.id, id));
+  }
+
+  async checkAvailability(clinicId: number, doctorId: number, date: string): Promise<boolean> {
+    const exceptions = await this.getAvailabilityExceptions(clinicId, doctorId, date);
+    // If there's an exception, isAvailable determines it. Default is true if no exception.
+    if (exceptions.length > 0) {
+      return exceptions[0].isAvailable;
+    }
+    return true;
+  }
+
   async getMedicalRecords(patientId: number): Promise<(MedicalRecord & { doctor: User })[]> {
     const result = await db.select({
       record: medicalRecords,
@@ -172,7 +203,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateMedicalRecord(id: number, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
     // @ts-ignore - vitals type mismatch in drizzle-zod vs drizzle-orm
-    const [updated] = await db.update(medicalRecords).set(record).where(eq(medicalRecords.id, id)).returning();
+    const [updated] = await db.update(medicalRecords).set(record as any).where(eq(medicalRecords.id, id)).returning();
     return updated;
   }
 
