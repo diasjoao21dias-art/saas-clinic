@@ -24,8 +24,8 @@ export interface IStorage {
   getAppointments(clinicId: number, filters?: { date?: string; doctorId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]>;
   getAppointment(id: number): Promise<Appointment | undefined>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
-  updateAppointment(id: number, appointment: Partial<InsertAppointment>): Promise<Appointment>;
-  updateAppointmentStatus(id: number, status: string): Promise<Appointment>;
+  updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment>;
+  updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string }): Promise<Appointment>;
   deleteAppointment(id: number): Promise<void>;
 
   // Availability
@@ -145,8 +145,12 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async updateAppointmentStatus(id: number, status: string): Promise<Appointment> {
-    const [updated] = await db.update(appointments).set({ status }).where(eq(appointments.id, id)).returning();
+  async updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string }): Promise<Appointment> {
+    const updateData: any = { status };
+    if (paymentDetails?.method) updateData.paymentMethod = paymentDetails.method;
+    if (paymentDetails?.status) updateData.paymentStatus = paymentDetails.status;
+    
+    const [updated] = await db.update(appointments).set(updateData).where(eq(appointments.id, id)).returning();
     return updated;
   }
 

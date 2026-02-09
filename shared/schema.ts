@@ -46,7 +46,9 @@ export const appointments = pgTable("appointments", {
   date: date("date").notNull(),
   startTime: text("start_time").notNull(), // HH:mm
   duration: integer("duration").default(30).notNull(), // minutes
-  status: text("status").default("agendado").notNull(), // agendado, confirmado, presente, em_atendimento, finalizado, cancelado
+  status: text("status").default("agendado").notNull(), // agendado, confirmado, presente, em_atendimento, finalizado, cancelado, remarcado, ausente
+  paymentMethod: text("payment_method"), // dinheiro, cartao_credito, cartao_debito, pix, convenio
+  paymentStatus: text("payment_status").default("pendente").notNull(), // pendente, pago
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
