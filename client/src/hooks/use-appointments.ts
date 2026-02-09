@@ -46,7 +46,10 @@ export function useCreateAppointment() {
         credentials: "include",
       });
       
-      if (!res.ok) throw new Error("Failed to schedule appointment");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to schedule appointment");
+      }
       return api.appointments.create.responses[201].parse(await res.json());
     },
     onSuccess: () => {

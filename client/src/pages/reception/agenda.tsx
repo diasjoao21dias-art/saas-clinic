@@ -62,8 +62,12 @@ export default function AgendaPage() {
       setIsAptDialogOpen(false);
       setEditingAppointment(null);
     },
-    onError: (error: any) => {
-      toast({ title: "Erro", description: error.message || "Falha ao atualizar agendamento", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ 
+        title: "Conflito de Horário", 
+        description: error.message, 
+        variant: "destructive" 
+      });
     }
   });
 
