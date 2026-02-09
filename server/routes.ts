@@ -94,13 +94,26 @@ export async function registerRoutes(
       // @ts-ignore
       const clinicId = req.user!.clinicId;
 
+      const duration = input.duration || 30;
+      const startTime = input.startTime;
+      const [startHour, startMin] = startTime.split(':').map(Number);
+      const startMinutes = startHour * 60 + startMin;
+      const endMinutes = startMinutes + duration;
+
       // Check for overlapping appointments
       const existing = await storage.getAppointments(clinicId, {
         date: input.date,
         doctorId: input.doctorId
       });
 
-      const hasConflict = existing.some(apt => apt.startTime === input.startTime);
+      const hasConflict = existing.some(apt => {
+        const [aptHour, aptMin] = apt.startTime.split(':').map(Number);
+        const aptStartMinutes = aptHour * 60 + aptMin;
+        const aptEndMinutes = aptStartMinutes + apt.duration;
+
+        return (startMinutes < aptEndMinutes && endMinutes > aptStartMinutes);
+      });
+
       if (hasConflict) {
         return res.status(400).json({ message: "Este horário já está ocupado para este médico." });
       }
@@ -126,14 +139,37 @@ export async function registerRoutes(
       const clinicId = req.user!.clinicId;
 
       if (input.startTime || input.date || input.doctorId) {
-        const existing = await storage.getAppointments(clinicId, {
-          date: input.date,
-          doctorId: input.doctorId
-        });
+        const appointmentDate = input.date || (await storage.getAppointment(id))?.date;
+        const doctorId = input.doctorId || (await storage.getAppointment(id))?.doctorId;
+        
+        if (appointmentDate && doctorId) {
+          const existing = await storage.getAppointments(clinicId, {
+            date: appointmentDate,
+            doctorId: doctorId
+          });
 
-        const hasConflict = existing.some(apt => apt.id !== id && apt.startTime === input.startTime);
-        if (hasConflict) {
-          return res.status(400).json({ message: "Este horário já está ocupado para este médico." });
+          const currentApt = await storage.getAppointment(id);
+          const startTime = input.startTime || currentApt?.startTime;
+          const duration = input.duration || currentApt?.duration || 30;
+
+          if (startTime) {
+            const [startHour, startMin] = startTime.split(':').map(Number);
+            const startMinutes = startHour * 60 + startMin;
+            const endMinutes = startMinutes + duration;
+
+            const hasConflict = existing.some(apt => {
+              if (apt.id === id) return false;
+              const [aptHour, aptMin] = apt.startTime.split(':').map(Number);
+              const aptStartMinutes = aptHour * 60 + aptMin;
+              const aptEndMinutes = aptStartMinutes + apt.duration;
+
+              return (startMinutes < aptEndMinutes && endMinutes > aptStartMinutes);
+            });
+
+            if (hasConflict) {
+              return res.status(400).json({ message: "Este horário já está ocupado para este médico." });
+            }
+          }
         }
       }
 
