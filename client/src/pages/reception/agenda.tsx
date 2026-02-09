@@ -84,7 +84,7 @@ export default function AgendaPage() {
     defaultValues: {
       patientId: 0,
       doctorId: 0,
-      date: selectedDate,
+      date: format(new Date(), 'yyyy-MM-dd'),
       startTime: "09:00",
       duration: 30,
       status: "agendado",
