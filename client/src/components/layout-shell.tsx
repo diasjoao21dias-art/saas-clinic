@@ -40,7 +40,7 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
       case "operator":
         return [
           { href: "/reception/dashboard", label: "Dashboard", icon: LayoutDashboard },
-          { href: "/reception/schedule", label: "Agenda", icon: CalendarDays },
+          { href: "/reception/schedule", label: "Agenda Completa", icon: CalendarDays },
           { href: "/reception/patients", label: "Pacientes", icon: Users },
           { href: "/reception/checkin", label: "Check-in Rápido", icon: ClipboardList },
         ];
