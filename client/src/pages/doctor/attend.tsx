@@ -48,6 +48,7 @@ export default function AttendPage() {
       clinicId: appointment?.clinicId,
       chiefComplaint: "",
       history: "",
+      allergies: "",
       diagnosis: "",
       prescription: "",
       notes: "",
@@ -255,9 +256,22 @@ export default function AttendPage() {
 
                 <div>
                   <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Alergias</h4>
-                  <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm font-medium border border-red-100">
-                    Sem alergias conhecidas
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="allergies"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            value={field.value || ""} 
+                            className="min-h-[60px] bg-red-50 text-red-700 border-red-100 placeholder:text-red-400 focus-visible:ring-red-200" 
+                            placeholder="Descreva as alergias ou 'Sem alergias conhecidas'..." 
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
             </ScrollArea>
