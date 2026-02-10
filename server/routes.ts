@@ -258,6 +258,23 @@ export async function registerRoutes(
     try {
       // @ts-ignore
       const clinicId = req.user!.clinicId;
+      const { doctorId, date, dates, isAvailable } = req.body;
+
+      if (dates && Array.isArray(dates)) {
+        // Bulk creation
+        const results = [];
+        for (const d of dates) {
+          const exception = await storage.createAvailabilityException({
+            doctorId,
+            date: d,
+            isAvailable,
+            clinicId,
+          });
+          results.push(exception);
+        }
+        return res.status(201).json(results);
+      }
+
       const exception = await storage.createAvailabilityException({
         ...req.body,
         clinicId,
@@ -265,6 +282,28 @@ export async function registerRoutes(
       res.status(201).json(exception);
     } catch (err) {
       res.status(500).json({ message: "Erro ao criar exceção de disponibilidade" });
+    }
+  });
+
+  app.post("/api/availability-exceptions/bulk-delete", requireAuth, async (req, res) => {
+    try {
+      // @ts-ignore
+      const clinicId = req.user!.clinicId;
+      const { doctorId, dates } = req.body;
+
+      if (!dates || !Array.isArray(dates)) {
+        return res.status(400).json({ message: "Datas inválidas" });
+      }
+
+      for (const d of dates) {
+        const exceptions = await storage.getAvailabilityExceptions(clinicId, doctorId, d);
+        for (const ex of exceptions) {
+          await storage.deleteAvailabilityException(ex.id);
+        }
+      }
+      res.sendStatus(204);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao excluir exceções de disponibilidade" });
     }
   });
 

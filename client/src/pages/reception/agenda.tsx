@@ -25,6 +25,10 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { eachDayOfInterval } from "date-fns";
+import { DateRange } from "react-day-picker";
+
 export default function AgendaPage() {
   const [viewRange, setViewRange] = useState({ 
     start: format(new Date(), 'yyyy-MM-dd'),
@@ -33,6 +37,11 @@ export default function AgendaPage() {
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | undefined>();
   const [editingAppointment, setEditingAppointment] = useState<AppointmentWithDetails | null>(null);
   const [isAptDialogOpen, setIsAptDialogOpen] = useState(false);
+  const [isAvailabilityDialogOpen, setIsAvailabilityDialogOpen] = useState(false);
+  const [availabilityDateRange, setAvailabilityDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date(),
+  });
   
   const { data: allAppointments, isLoading: isLoadingAppointments } = useAppointments({ 
     startDate: viewRange.start, 
@@ -72,21 +81,19 @@ export default function AgendaPage() {
   });
 
   const toggleAvailability = useMutation({
-    mutationFn: async ({ doctorId, date, isAvailable }: any) => {
+    mutationFn: async ({ doctorId, dates, isAvailable }: any) => {
       if (isAvailable) {
-        // If we are making it available, we find the exception (which was blocking it) and delete it
-        const ex = availabilityExceptions?.find(e => e.doctorId === doctorId && e.date === date);
-        if (ex) {
-          await apiRequest("DELETE", `/api/availability-exceptions/${ex.id}`);
-        }
+        // If we are making it available, we delete existing exceptions
+        await apiRequest("POST", "/api/availability-exceptions/bulk-delete", { doctorId, dates });
       } else {
         // Blocking it
-        await apiRequest("POST", "/api/availability-exceptions", { doctorId, date, isAvailable: false });
+        await apiRequest("POST", "/api/availability-exceptions", { doctorId, dates, isAvailable: false });
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/availability-exceptions"] });
       toast({ title: "Agenda atualizada", description: "Disponibilidade alterada com sucesso." });
+      setIsAvailabilityDialogOpen(false);
     }
   });
 
@@ -264,22 +271,72 @@ export default function AgendaPage() {
             {selectedDoctorId && (
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  const today = format(new Date(), 'yyyy-MM-dd');
-                  const isCurrentlyBlocked = availabilityExceptions?.some(ex => ex.doctorId === selectedDoctorId && ex.date === today && !ex.isAvailable);
-                  toggleAvailability.mutate({ 
-                    doctorId: selectedDoctorId, 
-                    date: today, 
-                    isAvailable: isCurrentlyBlocked 
-                  });
-                }}
-                className={availabilityExceptions?.some(ex => ex.doctorId === selectedDoctorId && ex.date === format(new Date(), 'yyyy-MM-dd') && !ex.isAvailable) ? "border-destructive text-destructive" : ""}
+                onClick={() => setIsAvailabilityDialogOpen(true)}
               >
-                {availabilityExceptions?.some(ex => ex.doctorId === selectedDoctorId && ex.date === format(new Date(), 'yyyy-MM-dd') && !ex.isAvailable) ? "Abrir Agenda (Hoje)" : "Fechar Agenda (Hoje)"}
+                Bloquear/Desbloquear Agenda
               </Button>
             )}
           </div>
         </div>
+
+        <Dialog open={isAvailabilityDialogOpen} onOpenChange={setIsAvailabilityDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Gerenciar Disponibilidade</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Período</label>
+                <DateRangePicker 
+                  date={availabilityDateRange}
+                  setDate={setAvailabilityDateRange}
+                />
+              </div>
+              <div className="flex gap-4">
+                <Button 
+                  className="flex-1"
+                  variant="destructive"
+                  onClick={() => {
+                    if (!availabilityDateRange?.from || !selectedDoctorId) return;
+                    const dates = eachDayOfInterval({
+                      start: availabilityDateRange.from,
+                      end: availabilityDateRange.to || availabilityDateRange.from
+                    }).map(d => format(d, 'yyyy-MM-dd'));
+                    
+                    toggleAvailability.mutate({
+                      doctorId: selectedDoctorId,
+                      dates,
+                      isAvailable: false
+                    });
+                  }}
+                  disabled={toggleAvailability.isPending}
+                >
+                  Fechar Agenda
+                </Button>
+                <Button 
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => {
+                    if (!availabilityDateRange?.from || !selectedDoctorId) return;
+                    const dates = eachDayOfInterval({
+                      start: availabilityDateRange.from,
+                      end: availabilityDateRange.to || availabilityDateRange.from
+                    }).map(d => format(d, 'yyyy-MM-dd'));
+                    
+                    toggleAvailability.mutate({
+                      doctorId: selectedDoctorId,
+                      dates,
+                      isAvailable: true
+                    });
+                  }}
+                  disabled={toggleAvailability.isPending}
+                >
+                  Abrir Agenda
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
