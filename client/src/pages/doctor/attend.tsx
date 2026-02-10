@@ -19,6 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2, Save, CheckCircle, History, FileText } from "lucide-react";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export default function AttendPage() {
   const [, params] = useRoute("/doctor/attend/:id");
@@ -160,7 +161,7 @@ export default function AttendPage() {
               Consulta: <span className="text-primary">{appointment.patient.name}</span>
             </h1>
             <p className="text-muted-foreground text-sm">
-              {format(new Date(), 'PPP')} • {appointment.startTime}
+              {format(new Date(), 'PPP', { locale: ptBR })} • {appointment.startTime}
             </p>
           </div>
           <div className="flex gap-2">
@@ -180,115 +181,115 @@ export default function AttendPage() {
         </div>
 
         {/* Workspace */}
-        <div className="grid lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
-          {/* Patient Sidebar Info */}
-          <Card className="lg:col-span-1 border-none shadow-sm flex flex-col h-full bg-white">
-            <CardHeader className="bg-slate-50 border-b pb-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
-                  {appointment.patient.name.charAt(0)}
-                </div>
-                <div>
-                  <CardTitle className="text-lg">{appointment.patient.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {format(new Date(appointment.patient.birthDate), 'dd MMM yyyy')} ({new Date().getFullYear() - new Date(appointment.patient.birthDate).getFullYear()} anos)
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-            <ScrollArea className="flex-1 p-6">
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Informações de Contato</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-slate-500">Telefone</p>
-                      <p className="font-medium">{appointment.patient.phone || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500">Email</p>
-                      <p className="font-medium truncate" title={appointment.patient.email || ""}>{appointment.patient.email || "N/A"}</p>
-                    </div>
+        <Form {...form}>
+          <div className="grid lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
+            {/* Patient Sidebar Info */}
+            <Card className="lg:col-span-1 border-none shadow-sm flex flex-col h-full bg-white">
+              <CardHeader className="bg-slate-50 border-b pb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
+                    {appointment.patient.name.charAt(0)}
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{appointment.patient.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {format(new Date(appointment.patient.birthDate), 'dd MMM yyyy', { locale: ptBR })} ({new Date().getFullYear() - new Date(appointment.patient.birthDate).getFullYear()} anos)
+                    </p>
                   </div>
                 </div>
-
-                <Separator />
-
-                <div>
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Sinais Vitais</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
-                      <p className="text-xs text-blue-600 mb-1">Pressão Arterial</p>
-                      <Input 
-                        {...form.register("vitals.bloodPressure")} 
-                        className="h-8 bg-white border-blue-200" 
-                        placeholder="120/80" 
-                      />
-                    </div>
-                    <div className="p-3 rounded-lg bg-red-50 border border-red-100">
-                      <p className="text-xs text-red-600 mb-1">Freq. Cardíaca</p>
-                      <Input 
-                        {...form.register("vitals.heartRate")} 
-                        className="h-8 bg-white border-red-200" 
-                        placeholder="72 bpm" 
-                      />
-                    </div>
-                    <div className="p-3 rounded-lg bg-orange-50 border border-orange-100">
-                      <p className="text-xs text-orange-600 mb-1">Temperatura</p>
-                      <Input 
-                        {...form.register("vitals.temperature")} 
-                        className="h-8 bg-white border-orange-200" 
-                        placeholder="36.5 °C" 
-                      />
-                    </div>
-                    <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                      <p className="text-xs text-green-600 mb-1">Peso</p>
-                      <Input 
-                        {...form.register("vitals.weight")} 
-                        className="h-8 bg-white border-green-200" 
-                        placeholder="70 kg" 
-                      />
+              </CardHeader>
+              <ScrollArea className="flex-1 p-6">
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Informações de Contato</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-slate-500">Telefone</p>
+                        <p className="font-medium">{appointment.patient.phone || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500">Email</p>
+                        <p className="font-medium truncate" title={appointment.patient.email || ""}>{appointment.patient.email || "N/A"}</p>
+                      </div>
                     </div>
                   </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Sinais Vitais</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                        <p className="text-xs text-blue-600 mb-1">Pressão Arterial</p>
+                        <Input 
+                          {...form.register("vitals.bloodPressure")} 
+                          className="h-8 bg-white border-blue-200" 
+                          placeholder="120/80" 
+                        />
+                      </div>
+                      <div className="p-3 rounded-lg bg-red-50 border border-red-100">
+                        <p className="text-xs text-red-600 mb-1">Freq. Cardíaca</p>
+                        <Input 
+                          {...form.register("vitals.heartRate")} 
+                          className="h-8 bg-white border-red-200" 
+                          placeholder="72 bpm" 
+                        />
+                      </div>
+                      <div className="p-3 rounded-lg bg-orange-50 border border-orange-100">
+                        <p className="text-xs text-orange-600 mb-1">Temperatura</p>
+                        <Input 
+                          {...form.register("vitals.temperature")} 
+                          className="h-8 bg-white border-orange-200" 
+                          placeholder="36.5 °C" 
+                        />
+                      </div>
+                      <div className="p-3 rounded-lg bg-green-50 border border-green-100">
+                        <p className="text-xs text-green-600 mb-1">Peso</p>
+                        <Input 
+                          {...form.register("vitals.weight")} 
+                          className="h-8 bg-white border-green-200" 
+                          placeholder="70 kg" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Alergias</h4>
+                    <FormField
+                      control={form.control}
+                      name="allergies"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Textarea 
+                              {...field} 
+                              value={field.value || ""} 
+                              className="min-h-[60px] bg-red-50 text-red-700 border-red-100 placeholder:text-red-400 focus-visible:ring-red-200" 
+                              placeholder="Descreva as alergias ou 'Sem alergias conhecidas'..." 
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </ScrollArea>
+            </Card>
+
+            {/* Main Clinical Form */}
+            <Card className="lg:col-span-2 border-none shadow-sm flex flex-col h-full overflow-hidden bg-white">
+              <Tabs defaultValue="anamnesis" className="h-full flex flex-col">
+                <div className="px-6 pt-6 border-b">
+                  <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100/50 p-1">
+                    <TabsTrigger value="anamnesis">Anamnese</TabsTrigger>
+                    <TabsTrigger value="diagnosis">Diagnóstico e Plano</TabsTrigger>
+                    <TabsTrigger value="prescription">Receituário</TabsTrigger>
+                  </TabsList>
                 </div>
 
-                <Separator />
-
-                <div>
-                  <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Alergias</h4>
-                  <FormField
-                    control={form.control}
-                    name="allergies"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea 
-                            {...field} 
-                            value={field.value || ""} 
-                            className="min-h-[60px] bg-red-50 text-red-700 border-red-100 placeholder:text-red-400 focus-visible:ring-red-200" 
-                            placeholder="Descreva as alergias ou 'Sem alergias conhecidas'..." 
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            </ScrollArea>
-          </Card>
-
-          {/* Main Clinical Form */}
-          <Card className="lg:col-span-2 border-none shadow-sm flex flex-col h-full overflow-hidden bg-white">
-            <Tabs defaultValue="anamnesis" className="h-full flex flex-col">
-              <div className="px-6 pt-6 border-b">
-                <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100/50 p-1">
-                  <TabsTrigger value="anamnesis">Anamnese</TabsTrigger>
-                  <TabsTrigger value="diagnosis">Diagnóstico e Plano</TabsTrigger>
-                  <TabsTrigger value="prescription">Receituário</TabsTrigger>
-                </TabsList>
-              </div>
-
-              <Form {...form}>
                 <ScrollArea className="flex-1 p-6">
                   <TabsContent value="anamnesis" className="space-y-6 mt-0">
                     <FormField
@@ -375,10 +376,10 @@ export default function AttendPage() {
                     </div>
                   </TabsContent>
                 </ScrollArea>
-              </Form>
-            </Tabs>
-          </Card>
-        </div>
+              </Tabs>
+            </Card>
+          </div>
+        </Form>
       </div>
     </LayoutShell>
   );
