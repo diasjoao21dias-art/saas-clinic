@@ -319,6 +319,49 @@ export async function registerRoutes(
     res.json(updated);
   });
 
+  // Clinics
+  app.get(api.clinics.list.path, requireAuth, async (req, res) => {
+    const clinics = await storage.getClinics();
+    res.json(clinics);
+  });
+
+  app.get(api.clinics.get.path, requireAuth, async (req, res) => {
+    const clinic = await storage.getClinic(Number(req.params.id));
+    if (!clinic) return res.status(404).json({ message: "Clínica não encontrada" });
+    res.json(clinic);
+  });
+
+  app.post(api.clinics.create.path, requireAuth, async (req, res) => {
+    try {
+      const input = api.clinics.create.input.parse(req.body);
+      const clinic = await storage.createClinic(input);
+      res.status(201).json(clinic);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.put(api.clinics.update.path, requireAuth, async (req, res) => {
+    try {
+      const updated = await storage.updateClinic(Number(req.params.id), req.body);
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao atualizar clínica" });
+    }
+  });
+
+  app.delete(api.clinics.delete.path, requireAuth, async (req, res) => {
+    try {
+      await storage.deleteClinic(Number(req.params.id));
+      res.sendStatus(204);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao excluir clínica" });
+    }
+  });
+
   // SEED DATA
   await seedDatabase();
 

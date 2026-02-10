@@ -4,6 +4,7 @@ import {
   insertPatientSchema, 
   insertAppointmentSchema, 
   insertMedicalRecordSchema,
+  insertClinicSchema,
   users,
   patients,
   appointments,
@@ -228,6 +229,51 @@ export const api = {
       input: insertMedicalRecordSchema.partial(),
       responses: {
         200: z.custom<typeof medicalRecords.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+  },
+
+  // --- CLINICS ---
+  clinics: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/clinics',
+      responses: {
+        200: z.array(z.custom<typeof clinics.$inferSelect>()),
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/clinics/:id',
+      responses: {
+        200: z.custom<typeof clinics.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/clinics',
+      input: insertClinicSchema,
+      responses: {
+        201: z.custom<typeof clinics.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/clinics/:id',
+      input: insertClinicSchema.partial(),
+      responses: {
+        200: z.custom<typeof clinics.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/clinics/:id',
+      responses: {
+        204: z.void(),
         404: errorSchemas.notFound,
       },
     },

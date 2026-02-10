@@ -3,7 +3,7 @@ import {
   users, patients, appointments, medicalRecords, clinics, availabilityExceptions,
   type User, type InsertUser, type Patient, type InsertPatient,
   type Appointment, type InsertAppointment, type MedicalRecord, type InsertMedicalRecord,
-  type Clinic, type AvailabilityException, type InsertAvailabilityException
+  type Clinic, type InsertClinic, type AvailabilityException, type InsertAvailabilityException
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
@@ -43,7 +43,11 @@ export interface IStorage {
   updateMedicalRecord(id: number, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord>;
   
   // Clinics
+  getClinics(): Promise<Clinic[]>;
   getClinic(id: number): Promise<Clinic | undefined>;
+  createClinic(clinic: InsertClinic): Promise<Clinic>;
+  updateClinic(id: number, clinic: Partial<InsertClinic>): Promise<Clinic>;
+  deleteClinic(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -225,6 +229,24 @@ export class DatabaseStorage implements IStorage {
   async getClinic(id: number): Promise<Clinic | undefined> {
     const [clinic] = await db.select().from(clinics).where(eq(clinics.id, id));
     return clinic;
+  }
+
+  async getClinics(): Promise<Clinic[]> {
+    return await db.select().from(clinics).orderBy(desc(clinics.createdAt));
+  }
+
+  async createClinic(clinic: InsertClinic): Promise<Clinic> {
+    const [newClinic] = await db.insert(clinics).values(clinic).returning();
+    return newClinic;
+  }
+
+  async updateClinic(id: number, clinic: Partial<InsertClinic>): Promise<Clinic> {
+    const [updated] = await db.update(clinics).set(clinic).where(eq(clinics.id, id)).returning();
+    return updated;
+  }
+
+  async deleteClinic(id: number): Promise<void> {
+    await db.delete(clinics).where(eq(clinics.id, id));
   }
 }
 
