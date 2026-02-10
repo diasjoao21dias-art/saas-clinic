@@ -272,7 +272,7 @@ export default function AttendPage() {
                         <FormItem>
                           <FormLabel className="text-base font-semibold text-slate-900">Queixa Principal</FormLabel>
                           <FormControl>
-                            <Textarea {...field} className="min-h-[100px] text-lg" placeholder="O paciente relata..." />
+                            <Textarea {...field} value={field.value || ""} className="min-h-[100px] text-lg" placeholder="O paciente relata..." />
                           </FormControl>
                         </FormItem>
                       )}
@@ -284,7 +284,7 @@ export default function AttendPage() {
                         <FormItem>
                           <FormLabel className="text-base font-semibold text-slate-900">Histórico da Doença Atual</FormLabel>
                           <FormControl>
-                            <Textarea {...field} className="min-h-[200px]" placeholder="Histórico detalhado..." />
+                            <Textarea {...field} value={field.value || ""} className="min-h-[200px]" placeholder="Histórico detalhado..." />
                           </FormControl>
                         </FormItem>
                       )}
@@ -299,7 +299,7 @@ export default function AttendPage() {
                         <FormItem>
                           <FormLabel className="text-base font-semibold text-slate-900">Diagnóstico (CID-10)</FormLabel>
                           <FormControl>
-                            <Input {...field} className="text-lg" placeholder="ex: J00 Nasofaringite aguda" />
+                            <Input {...field} value={field.value || ""} className="text-lg" placeholder="ex: J00 Nasofaringite aguda" />
                           </FormControl>
                         </FormItem>
                       )}
@@ -311,7 +311,7 @@ export default function AttendPage() {
                         <FormItem>
                           <FormLabel className="text-base font-semibold text-slate-900">Notas de Evolução Clínica</FormLabel>
                           <FormControl>
-                            <Textarea {...field} className="min-h-[250px]" placeholder="Avaliação e plano..." />
+                            <Textarea {...field} value={field.value || ""} className="min-h-[250px]" placeholder="Avaliação e plano..." />
                           </FormControl>
                         </FormItem>
                       )}
@@ -332,6 +332,7 @@ export default function AttendPage() {
                             <FormControl>
                               <Textarea 
                                 {...field} 
+                                value={field.value || ""}
                                 className="min-h-[300px] font-mono text-sm leading-relaxed border-0 bg-transparent focus-visible:ring-0 resize-none" 
                                 placeholder="Rx:&#10;&#10;Amoxicilina 500mg&#10;1 cápsula via oral a cada 8h por 7 dias&#10;&#10;Ibuprofeno 400mg&#10;1 comprimido via oral a cada 6h em caso de dor" 
                               />
