@@ -180,7 +180,7 @@ export default function DoctorDashboard() {
                     <span>Calculadoras Médicas</span>
                   </Button>
                 </Link>
-                <Link href="/doctor/patients">
+                <Link href="/reception/patients">
                   <Button variant="outline" className="w-full justify-start gap-3 h-12 rounded-xl">
                     <Users className="w-5 h-5 text-orange-500" />
                     <span>Diretório de Pacientes</span>

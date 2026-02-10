@@ -14,6 +14,8 @@ import ClinicsManagement from "@/pages/admin/clinics";
 import DoctorDashboard from "@/pages/doctor/dashboard";
 import DoctorAppointmentsPage from "@/pages/doctor/appointments";
 import AttendPage from "@/pages/doctor/attend";
+import PrescriptionsPage from "@/pages/doctor/prescriptions";
+import CalculatorsPage from "@/pages/doctor/calculators";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ 
@@ -64,6 +66,12 @@ function Router() {
       </Route>
       <Route path="/doctor/attend/:id">
         <ProtectedRoute component={AttendPage} allowedRoles={['doctor', 'admin']} />
+      </Route>
+      <Route path="/doctor/prescriptions">
+        <ProtectedRoute component={PrescriptionsPage} allowedRoles={['doctor', 'admin']} />
+      </Route>
+      <Route path="/doctor/calculators">
+        <ProtectedRoute component={CalculatorsPage} allowedRoles={['doctor', 'admin']} />
       </Route>
 
       {/* Admin Routes */}
