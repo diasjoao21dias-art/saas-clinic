@@ -18,7 +18,19 @@ export default function PrescriptionsPage() {
 
   const handleUseTemplate = (content: string) => {
     localStorage.setItem("selected_template", content);
-    alert("Modelo selecionado! Vá para uma consulta para utilizá-lo.");
+    alert("Modelo selecionado! Vá para o atendimento do paciente e clique em 'Carregar Modelo' na aba de Receituário.");
+  };
+
+  const handleSaveModel = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const newTemplate = {
+      title: formData.get("title") as string,
+      description: formData.get("description") as string,
+      content: formData.get("content") as string,
+    };
+    setTemplates([...templates, newTemplate]);
+    setIsCreateOpen(false);
   };
 
   return (
@@ -50,7 +62,10 @@ export default function PrescriptionsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">{template.description}</p>
+                <p className="text-sm text-muted-foreground min-h-[40px]">{template.description}</p>
+                <div className="mt-4 p-3 bg-slate-50 rounded text-[10px] font-mono text-slate-500 overflow-hidden h-20">
+                  {template.content}
+                </div>
                 <Button 
                   variant="ghost" 
                   className="w-full mt-4 text-primary font-bold group-hover:bg-primary group-hover:text-white"
@@ -65,28 +80,47 @@ export default function PrescriptionsPage() {
       </div>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Novo Modelo de Prescrição</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <form onSubmit={handleSaveModel} className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Título do Modelo</Label>
-              <Input placeholder="Ex: Receita Hipertensão" />
-            </div>
-            <div className="space-y-2">
-              <Label>Descrição Curta</Label>
-              <Input placeholder="Ex: Padronização para pacientes hipertensos" />
+              <Label htmlFor="title">Título do Modelo</Label>
+              <Input id="title" name="title" required placeholder="Ex: Receita Hipertensão" />
             </div>
             <div className="space-y-2">
-              <Label>Conteúdo da Prescrição</Label>
-              <Textarea className="min-h-[200px] font-mono" placeholder="Rx: ..." />
+              <Label htmlFor="description">Descrição Curta</Label>
+              <Input id="description" name="description" required placeholder="Ex: Padronização para pacientes hipertensos" />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancelar</Button>
-              <Button onClick={() => setIsCreateOpen(false)}>Salvar Modelo</Button>
+            <div className="space-y-2">
+              <Label htmlFor="content">Conteúdo da Prescrição</Label>
+              <div className="relative">
+                <Textarea 
+                  id="content" 
+                  name="content" 
+                  required 
+                  className="min-h-[300px] font-mono text-sm p-4" 
+                  placeholder="Rx:&#10;&#10;1. Medicamento...&#10;Tomar..." 
+                />
+                <div className="absolute bottom-2 right-2 flex gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => {
+                    const el = document.getElementById('content') as HTMLTextAreaElement;
+                    el.value += "\n\nATESTADO MÉDICO\n\nAtesto que o(a) Sr(a). [Nome]...";
+                  }}>+ Atestado</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => {
+                    const el = document.getElementById('content') as HTMLTextAreaElement;
+                    el.value += "\n\nRx:\n1. [Medicamento]\nTomar...";
+                  }}>+ Receita</Button>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Dica: Use colchetes como [Nome] ou [Dose] para identificar campos que você preencherá depois.</p>
             </div>
-          </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>Cancelar</Button>
+              <Button type="submit" className="bg-primary text-white">Salvar Modelo</Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </LayoutShell>
