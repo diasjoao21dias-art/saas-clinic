@@ -261,7 +261,7 @@ export default function AgendaPage() {
               <SelectContent>
                 <SelectItem value="all">Todos os Médicos</SelectItem>
                 {doctors?.map(d => (
-                  <SelectItem key={d.id} value={d.id.toString()}>Dr. {d.name}</SelectItem>
+                  <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
