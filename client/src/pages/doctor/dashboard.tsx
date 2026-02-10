@@ -168,18 +168,24 @@ export default function DoctorDashboard() {
                 <CardTitle className="text-lg">Ferramentas Rápidas</CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-1 gap-3">
-                <Button variant="outline" className="w-full justify-start gap-3 h-12 rounded-xl">
-                  <FileText className="w-5 h-5 text-blue-500" />
-                  <span>Modelos de Receita</span>
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-3 h-12 rounded-xl">
-                  <Activity className="w-5 h-5 text-green-500" />
-                  <span>Calculadoras Médicas</span>
-                </Button>
-                <Button variant="outline" className="w-full justify-start gap-3 h-12 rounded-xl">
-                  <Users className="w-5 h-5 text-orange-500" />
-                  <span>Diretório de Pacientes</span>
-                </Button>
+                <Link href="/doctor/prescriptions">
+                  <Button variant="outline" className="w-full justify-start gap-3 h-12 rounded-xl">
+                    <FileText className="w-5 h-5 text-blue-500" />
+                    <span>Modelos de Receita</span>
+                  </Button>
+                </Link>
+                <Link href="/doctor/calculators">
+                  <Button variant="outline" className="w-full justify-start gap-3 h-12 rounded-xl">
+                    <Activity className="w-5 h-5 text-green-500" />
+                    <span>Calculadoras Médicas</span>
+                  </Button>
+                </Link>
+                <Link href="/doctor/patients">
+                  <Button variant="outline" className="w-full justify-start gap-3 h-12 rounded-xl">
+                    <Users className="w-5 h-5 text-orange-500" />
+                    <span>Diretório de Pacientes</span>
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
