@@ -1,6 +1,7 @@
 import { useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { api, type InsertMedicalRecord } from "@shared/routes";
+import { api } from "@shared/routes";
+import type { InsertMedicalRecord } from "@shared/schema";
 import LayoutShell from "@/components/layout-shell";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

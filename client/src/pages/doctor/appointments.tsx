@@ -7,6 +7,7 @@ import { CalendarDays, Clock, User, ArrowRight, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export default function DoctorAppointmentsPage() {
   const { data: appointments, isLoading } = useQuery({
@@ -98,8 +99,4 @@ export default function DoctorAppointmentsPage() {
       </div>
     </LayoutShell>
   );
-}
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
 }
