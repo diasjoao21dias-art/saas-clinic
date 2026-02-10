@@ -104,25 +104,83 @@ import { cn } from "@/lib/utils";
 function PediatricDoseCalculator() {
   const [weight, setWeight] = useState("");
   const [dosage, setDosage] = useState("");
+  const [concentration, setConcentration] = useState(""); // mg
+  const [volume, setVolume] = useState(""); // ml
+  const [frequency, setFrequency] = useState("1");
+
   const weightNum = parseFloat(weight);
   const dosageNum = parseFloat(dosage);
-  const totalDose = weightNum && dosageNum ? (weightNum * dosageNum).toFixed(1) : null;
+  const concNum = parseFloat(concentration);
+  const volNum = parseFloat(volume);
+  const freqNum = parseInt(frequency);
+
+  const totalDoseMg = weightNum && dosageNum ? weightNum * dosageNum : null;
+  const dosePerTimeMg = totalDoseMg && freqNum ? totalDoseMg / freqNum : null;
+  const dosePerTimeMl = dosePerTimeMg && concNum && volNum ? (dosePerTimeMg * volNum) / concNum : null;
 
   return (
     <div className="space-y-4 py-4">
-      <div className="space-y-2">
-        <Label>Peso da Criança (kg)</Label>
-        <Input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="ex: 15" />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Peso da Criança (kg)</Label>
+          <Input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="ex: 15" />
+        </div>
+        <div className="space-y-2">
+          <Label>Dose (mg/kg/dia)</Label>
+          <Input type="number" value={dosage} onChange={(e) => setDosage(e.target.value)} placeholder="ex: 50" />
+        </div>
       </div>
-      <div className="space-y-2">
-        <Label>Dosagem Recomendada (mg/kg)</Label>
-        <Input type="number" value={dosage} onChange={(e) => setDosage(e.target.value)} placeholder="ex: 10" />
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Conc. (mg)</Label>
+          <Input type="number" value={concentration} onChange={(e) => setConcentration(e.target.value)} placeholder="ex: 250" />
+        </div>
+        <div className="space-y-2">
+          <Label>Em quantos ml?</Label>
+          <Input type="number" value={volume} onChange={(e) => setVolume(e.target.value)} placeholder="ex: 5" />
+        </div>
       </div>
-      {totalDose && (
-        <div className="p-4 bg-slate-50 rounded-lg text-center">
-          <p className="text-sm text-muted-foreground">Dose Total Recomendada</p>
-          <p className="text-4xl font-bold text-primary my-1">{totalDose} mg</p>
-          <p className="text-xs text-muted-foreground">Baseado no peso corporal</p>
+
+      <div className="space-y-2">
+        <Label>Frequência (vezes ao dia)</Label>
+        <select 
+          className="w-full h-10 px-3 rounded-md border border-input bg-background"
+          value={frequency} 
+          onChange={(e) => setFrequency(e.target.value)}
+        >
+          <option value="1">1x ao dia (24/24h)</option>
+          <option value="2">2x ao dia (12/12h)</option>
+          <option value="3">3x ao dia (8/8h)</option>
+          <option value="4">4x ao dia (6/6h)</option>
+        </select>
+      </div>
+
+      {totalDoseMg && (
+        <div className="p-4 bg-slate-50 rounded-lg space-y-3">
+          <div className="text-center border-b pb-2">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Dose Total Diária</p>
+            <p className="text-2xl font-bold text-primary">{totalDoseMg.toFixed(1)} mg/dia</p>
+          </div>
+          
+          {dosePerTimeMg && (
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase">Por Tomada (mg)</p>
+                <p className="text-lg font-semibold">{dosePerTimeMg.toFixed(1)} mg</p>
+              </div>
+              {dosePerTimeMl && (
+                <div>
+                  <p className="text-[10px] text-muted-foreground uppercase">Por Tomada (ml)</p>
+                  <p className="text-lg font-bold text-green-600">{dosePerTimeMl.toFixed(1)} ml</p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <p className="text-[10px] text-center text-muted-foreground italic mt-2">
+            * Sempre verifique a dose máxima recomendada na bula.
+          </p>
         </div>
       )}
     </div>
