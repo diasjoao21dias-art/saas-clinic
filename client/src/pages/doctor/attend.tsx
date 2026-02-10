@@ -141,6 +141,14 @@ export default function AttendPage() {
     printWindow.document.close();
   };
 
+  const loadTemplate = () => {
+    const template = localStorage.getItem("selected_template");
+    if (template) {
+      form.setValue("prescription", template);
+      localStorage.removeItem("selected_template");
+    }
+  };
+
   return (
     <LayoutShell>
       <div className="h-[calc(100vh-8rem)] flex flex-col">
@@ -155,6 +163,10 @@ export default function AttendPage() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={loadTemplate} className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
+              <FileText className="w-4 h-4 mr-2" />
+              Carregar Modelo
+            </Button>
             <Button variant="outline">
               <History className="w-4 h-4 mr-2" />
               Histórico do Paciente

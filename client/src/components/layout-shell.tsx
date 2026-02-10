@@ -10,7 +10,9 @@ import {
   Menu,
   X,
   Building2,
-  ClipboardList
+  ClipboardList,
+  FileText,
+  Calculator
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -35,6 +37,8 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
         return [
           { href: "/doctor/dashboard", label: "Dashboard", icon: LayoutDashboard },
           { href: "/doctor/appointments", label: "Minha Agenda", icon: CalendarDays },
+          { href: "/doctor/prescriptions", label: "Modelos de Receita", icon: FileText },
+          { href: "/doctor/calculators", label: "Calculadoras", icon: Calculator },
           { href: "/reception/patients", label: "Diretório de Pacientes", icon: Users },
         ];
       case "operator":
