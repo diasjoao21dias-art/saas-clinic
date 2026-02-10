@@ -12,6 +12,7 @@ import PatientDirectory from "@/pages/reception/patients";
 import TeamManagement from "@/pages/admin/users";
 import ClinicsManagement from "@/pages/admin/clinics";
 import DoctorDashboard from "@/pages/doctor/dashboard";
+import DoctorAppointmentsPage from "@/pages/doctor/appointments";
 import AttendPage from "@/pages/doctor/attend";
 import NotFound from "@/pages/not-found";
 
@@ -57,6 +58,9 @@ function Router() {
       {/* Doctor Routes */}
       <Route path="/doctor/dashboard">
         <ProtectedRoute component={DoctorDashboard} allowedRoles={['doctor', 'admin']} />
+      </Route>
+      <Route path="/doctor/appointments">
+        <ProtectedRoute component={DoctorAppointmentsPage} allowedRoles={['doctor', 'admin']} />
       </Route>
       <Route path="/doctor/attend/:id">
         <ProtectedRoute component={AttendPage} allowedRoles={['doctor', 'admin']} />

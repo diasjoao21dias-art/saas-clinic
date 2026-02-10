@@ -84,6 +84,62 @@ export default function AttendPage() {
     // Redirect or show success
   };
 
+  const handlePrint = () => {
+    const prescriptionContent = form.getValues("prescription");
+    const patientName = appointment.patient.name;
+    const doctorName = appointment.doctor.name;
+    const dateStr = format(new Date(), 'dd/MM/yyyy');
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Receituário - ${patientName}</title>
+          <style>
+            body { font-family: sans-serif; padding: 40px; line-height: 1.6; }
+            .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }
+            .doctor-info { margin-bottom: 40px; }
+            .patient-info { margin-bottom: 30px; font-weight: bold; }
+            .prescription-body { white-space: pre-wrap; min-height: 400px; }
+            .footer { margin-top: 50px; text-align: center; border-top: 1px solid #eee; padding-top: 20px; font-size: 0.8em; color: #666; }
+            .signature { margin-top: 60px; border-top: 1px solid #000; width: 250px; margin-left: auto; margin-right: auto; padding-top: 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 style="color: #0f172a; margin: 0;">MediFlow</h1>
+            <p style="margin: 5px 0;">Cuidado e Tecnologia</p>
+          </div>
+          <div class="doctor-info">
+            <p><strong>Médico:</strong> ${doctorName}</p>
+            <p><strong>Data:</strong> ${dateStr}</p>
+          </div>
+          <div class="patient-info">
+            Para: ${patientName}
+          </div>
+          <div class="prescription-body">
+            ${prescriptionContent || "Rx:\n\nSem medicamentos prescritos."}
+          </div>
+          <div class="signature">
+            Assinatura do Médico
+          </div>
+          <div class="footer">
+            Gerado eletronicamente via MediFlow em ${new Date().toLocaleString()}
+          </div>
+          <script>
+            window.onload = () => {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   return (
     <LayoutShell>
       <div className="h-[calc(100vh-8rem)] flex flex-col">
@@ -284,7 +340,8 @@ export default function AttendPage() {
                       />
                     </div>
                     <div className="flex justify-end">
-                      <Button variant="outline" className="gap-2">
+                      <Button variant="outline" className="gap-2" onClick={handlePrint}>
+                        <FileText className="w-4 h-4" />
                         Imprimir Receita
                       </Button>
                     </div>
