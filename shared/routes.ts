@@ -81,6 +81,32 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    create: {
+      method: 'POST' as const,
+      path: '/api/users',
+      input: insertUserSchema,
+      responses: {
+        201: z.custom<typeof users.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/users/:id',
+      input: insertUserSchema.partial(),
+      responses: {
+        200: z.custom<typeof users.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/users/:id',
+      responses: {
+        204: z.void(),
+        404: errorSchemas.notFound,
+      },
+    },
   },
 
   // --- PATIENTS ---

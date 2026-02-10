@@ -37,6 +37,41 @@ export async function registerRoutes(
     res.json(user);
   });
 
+  app.post(api.users.create.path, requireAuth, async (req, res) => {
+    try {
+      const input = api.users.create.input.parse(req.body);
+      // @ts-ignore
+      const user = await storage.createUser({
+        ...input,
+        clinicId: (req.user as any)!.clinicId,
+      });
+      res.status(201).json(user);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.put(api.users.update.path, requireAuth, async (req, res) => {
+    try {
+      const updated = await storage.updateUser(Number(req.params.id), req.body);
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao atualizar usuário" });
+    }
+  });
+
+  app.delete(api.users.delete.path, requireAuth, async (req, res) => {
+    try {
+      await storage.deleteUser(Number(req.params.id));
+      res.sendStatus(204);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao excluir usuário" });
+    }
+  });
+
   // Patients
   app.get(api.patients.list.path, requireAuth, async (req, res) => {
     // @ts-ignore
