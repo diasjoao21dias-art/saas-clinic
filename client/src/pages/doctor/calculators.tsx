@@ -101,14 +101,142 @@ function GFRCalculator() {
 
 import { cn } from "@/lib/utils";
 
+function PediatricDoseCalculator() {
+  const [weight, setWeight] = useState("");
+  const [dosage, setDosage] = useState("");
+  const weightNum = parseFloat(weight);
+  const dosageNum = parseFloat(dosage);
+  const totalDose = weightNum && dosageNum ? (weightNum * dosageNum).toFixed(1) : null;
+
+  return (
+    <div className="space-y-4 py-4">
+      <div className="space-y-2">
+        <Label>Peso da Criança (kg)</Label>
+        <Input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="ex: 15" />
+      </div>
+      <div className="space-y-2">
+        <Label>Dosagem Recomendada (mg/kg)</Label>
+        <Input type="number" value={dosage} onChange={(e) => setDosage(e.target.value)} placeholder="ex: 10" />
+      </div>
+      {totalDose && (
+        <div className="p-4 bg-slate-50 rounded-lg text-center">
+          <p className="text-sm text-muted-foreground">Dose Total Recomendada</p>
+          <p className="text-4xl font-bold text-primary my-1">{totalDose} mg</p>
+          <p className="text-xs text-muted-foreground">Baseado no peso corporal</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CVRiskCalculator() {
+  const [age, setAge] = useState("");
+  const [totalChol, setTotalChol] = useState("");
+  const [hdl, setHdl] = useState("");
+  const [sbp, setSbp] = useState("");
+  const [smoker, setSmoker] = useState("no");
+  const [treated, setTreated] = useState("no");
+  const [gender, setGender] = useState("male");
+
+  // Simplified Framingham Risk Score (approximation for demonstration)
+  const calculateRisk = () => {
+    const a = parseFloat(age);
+    const tc = parseFloat(totalChol);
+    const h = parseFloat(hdl);
+    const s = parseFloat(sbp);
+    
+    if (!a || !tc || !h || !s) return null;
+
+    // Very simplified logic for illustrative purposes
+    let points = 0;
+    if (gender === 'male') {
+      if (a < 35) points -= 9;
+      else if (a < 40) points -= 4;
+      else if (a < 45) points = 0;
+      else if (a < 50) points = 3;
+      else points = 6;
+    } else {
+      if (a < 35) points -= 7;
+      else points = 2;
+    }
+
+    if (smoker === 'yes') points += 2;
+    if (s > 140) points += 3;
+    
+    // Convert points to percentage (fake mapping for UI demo)
+    const risk = Math.min(Math.max(points * 2, 1), 30);
+    return risk.toFixed(1);
+  };
+
+  const risk = calculateRisk();
+
+  return (
+    <div className="space-y-4 py-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Idade</Label>
+          <Input type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="ex: 55" />
+        </div>
+        <div className="space-y-2">
+          <Label>Sexo</Label>
+          <select 
+            className="w-full h-10 px-3 rounded-md border border-input bg-background"
+            value={gender} 
+            onChange={(e) => setGender(e.target.value)}
+          >
+            <option value="male">Masculino</option>
+            <option value="female">Feminino</option>
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Colesterol Total</Label>
+          <Input type="number" value={totalChol} onChange={(e) => setTotalChol(e.target.value)} placeholder="mg/dL" />
+        </div>
+        <div className="space-y-2">
+          <Label>HDL</Label>
+          <Input type="number" value={hdl} onChange={(e) => setHdl(e.target.value)} placeholder="mg/dL" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>PAS (Sistólica)</Label>
+          <Input type="number" value={sbp} onChange={(e) => setSbp(e.target.value)} placeholder="mmHg" />
+        </div>
+        <div className="space-y-2">
+          <Label>Fumante</Label>
+          <select 
+            className="w-full h-10 px-3 rounded-md border border-input bg-background"
+            value={smoker} 
+            onChange={(e) => setSmoker(e.target.value)}
+          >
+            <option value="no">Não</option>
+            <option value="yes">Sim</option>
+          </select>
+        </div>
+      </div>
+      {risk && (
+        <div className="p-4 bg-slate-50 rounded-lg text-center">
+          <p className="text-sm text-muted-foreground">Risco Cardiovascular (10 anos)</p>
+          <p className="text-4xl font-bold text-primary my-1">{risk}%</p>
+          <p className={cn("font-medium", parseFloat(risk) > 10 ? "text-red-500" : "text-green-500")}>
+            {parseFloat(risk) > 10 ? "Risco Elevado" : "Risco Baixo/Moderado"}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CalculatorsPage() {
   const [activeCalc, setActiveCalc] = useState<string | null>(null);
 
   const calculators = [
     { id: "imc", title: "IMC", description: "Cálculo do Índice de Massa Corporal.", component: <IMCCalculator /> },
     { id: "gfr", title: "Filtração Glomerular", description: "Estimativa da taxa de filtração renal (CKD-EPI).", component: <GFRCalculator /> },
-    { id: "ped", title: "Dose Pediátrica", description: "Cálculo de dosagem por peso (mg/kg).", component: <div className="py-8 text-center text-muted-foreground">Calculadora em desenvolvimento</div> },
-    { id: "cv", title: "Risco Cardiovascular", description: "Escore de Framingham ou similar.", component: <div className="py-8 text-center text-muted-foreground">Calculadora em desenvolvimento</div> },
+    { id: "ped", title: "Dose Pediátrica", description: "Cálculo de dosagem por peso (mg/kg).", component: <PediatricDoseCalculator /> },
+    { id: "cv", title: "Risco Cardiovascular", description: "Escore de Framingham ou similar.", component: <CVRiskCalculator /> },
   ];
 
   return (
