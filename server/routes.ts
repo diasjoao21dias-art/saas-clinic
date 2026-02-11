@@ -380,6 +380,11 @@ export async function registerRoutes(
     res.status(201).json(item);
   });
 
+  app.delete("/api/inventory/:id", requireAuth, async (req, res) => {
+    await storage.deleteInventoryItem(Number(req.params.id));
+    res.sendStatus(204);
+  });
+
   app.post("/api/inventory/transaction", requireAuth, async (req, res) => {
     const tx = await storage.createInventoryTransaction(req.body);
     res.status(201).json(tx);
