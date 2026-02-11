@@ -27,6 +27,7 @@ import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 
 export default function AttendPage() {
+  const { toast } = useToast();
   const [, params] = useRoute("/doctor/attend/:id");
   const appointmentId = parseInt(params?.id || "0");
 
