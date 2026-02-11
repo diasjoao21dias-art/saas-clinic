@@ -176,7 +176,12 @@ export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type InsertMedicalRecord = z.infer<typeof insertMedicalRecordSchema>;
 
 export type CreateAppointmentRequest = InsertAppointment;
-export type UpdateAppointmentRequest = Partial<InsertAppointment>;
+export type UpdateAppointmentStatusRequest = {
+  status: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  price?: number;
+};
 
 // Augmented types for frontend display
 export type AppointmentWithDetails = Appointment & {

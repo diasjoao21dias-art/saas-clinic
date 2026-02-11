@@ -47,6 +47,7 @@ export default function CheckInPage() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState("pix");
+  const [paymentPrice, setPaymentPrice] = useState<number>(0);
   
   const { toast } = useToast();
   const { data: patients, isLoading: isLoadingPatients } = usePatients(search);
@@ -63,6 +64,7 @@ export default function CheckInPage() {
 
     if (appointment) {
       setSelectedAppointment(appointment);
+      setPaymentPrice(appointment.price / 100);
       setIsPaymentModalOpen(true);
     }
   };
@@ -75,7 +77,8 @@ export default function CheckInPage() {
         id: selectedAppointment.id, 
         status: 'presente',
         paymentMethod,
-        paymentStatus: 'pago'
+        paymentStatus: 'pago',
+        price: paymentPrice
       });
       
       setIsPaymentModalOpen(false);
@@ -342,7 +345,15 @@ export default function CheckInPage() {
               </div>
               <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
                 <span className="font-bold text-slate-800">Valor da Consulta:</span>
-                <span className="text-lg font-black text-primary">R$ 150,00</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-slate-500">R$</span>
+                  <Input 
+                    type="number" 
+                    value={paymentPrice}
+                    onChange={(e) => setPaymentPrice(Number(e.target.value))}
+                    className="w-24 h-9 font-black text-primary text-lg text-right bg-white border-primary/20"
+                  />
+                </div>
               </div>
             </div>
 

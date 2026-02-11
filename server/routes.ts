@@ -231,11 +231,11 @@ export async function registerRoutes(
   });
 
   app.patch(api.appointments.updateStatus.path, requireAuth, async (req, res) => {
-    const { status, paymentMethod, paymentStatus } = req.body;
+    const { status, paymentMethod, paymentStatus, price } = req.body;
     const updated = await storage.updateAppointmentStatus(
       Number(req.params.id), 
       status, 
-      { method: paymentMethod, status: paymentStatus }
+      { method: paymentMethod, status: paymentStatus, price: price ? Math.round(price * 100) : undefined }
     );
     res.json(updated);
   });

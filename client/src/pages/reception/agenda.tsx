@@ -179,7 +179,8 @@ export default function AgendaPage() {
       duration: 30,
       status: "agendado",
       notes: "",
-      clinicId: 1
+      clinicId: 1,
+      price: 150
     }
   });
 
@@ -193,7 +194,8 @@ export default function AgendaPage() {
         duration: editingAppointment.duration,
         status: editingAppointment.status,
         notes: editingAppointment.notes || "",
-        clinicId: editingAppointment.clinicId
+        clinicId: editingAppointment.clinicId,
+        price: editingAppointment.price / 100
       });
     } else {
       aptForm.reset({
@@ -204,17 +206,22 @@ export default function AgendaPage() {
         duration: 30,
         status: "agendado",
         notes: "",
-        clinicId: 1
+        clinicId: 1,
+        price: 150
       });
     }
   }, [editingAppointment]);
 
   const onAptSubmit = async (data: any) => {
     try {
+      const formattedData = {
+        ...data,
+        price: Math.round(data.price * 100)
+      };
       if (editingAppointment) {
-        await updateAppointment.mutateAsync(data);
+        await updateAppointment.mutateAsync(formattedData);
       } else {
-        await createAppointment.mutateAsync(data);
+        await createAppointment.mutateAsync(formattedData);
         setIsAptDialogOpen(false);
       }
       aptForm.reset();
@@ -610,6 +617,17 @@ export default function AgendaPage() {
               </div>
               
               <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={aptForm.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor da Consulta (R$)</FormLabel>
+                      <FormControl><Input type="number" step="0.01" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={aptForm.control}
                   name="status"
