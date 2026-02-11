@@ -2,13 +2,44 @@ import LayoutShell from "@/components/layout-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ClipboardList, UserPlus, ArrowRight } from "lucide-react";
+import { Search, ClipboardList, UserPlus, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { usePatients } from "@/hooks/use-patients";
+import { useAppointments, useUpdateAppointmentStatus } from "@/hooks/use-appointments";
+import { format } from "date-fns";
 
 export default function CheckInPage() {
   const [search, setSearch] = useState("");
-  const { data: patients, isLoading } = usePatients(search);
+  const { data: patients, isLoading: isLoadingPatients } = usePatients(search);
+  
+  // Get today's date in YYYY-MM-DD format
+  const today = format(new Date(), 'yyyy-MM-dd');
+  
+  const { data: appointments, isLoading: isLoadingAppointments } = useAppointments({ date: today });
+  const updateStatus = useUpdateAppointmentStatus();
+
+  const handleConfirmPresence = async (patientId: number) => {
+    // Find the appointment for this patient today that isn't already cancelled or finished
+    const appointment = appointments?.find(apt => 
+      apt.patientId === patientId && 
+      !['cancelado', 'finalizado', 'presente'].includes(apt.status)
+    );
+
+    if (appointment) {
+      await updateStatus.mutateAsync({ 
+        id: appointment.id, 
+        status: 'presente' 
+      });
+    } else {
+      // If no appointment found, we could potentially create a walk-in or just notify
+      alert("Nenhum agendamento pendente encontrado para este paciente hoje.");
+    }
+  };
+
+  const getPatientStatus = (patientId: number) => {
+    const appointment = appointments?.find(apt => apt.patientId === patientId);
+    return appointment?.status;
+  };
 
   return (
     <LayoutShell>
@@ -37,29 +68,56 @@ export default function CheckInPage() {
             </div>
 
             <div className="grid gap-4">
-              {isLoading ? (
-                <div className="text-center py-8 text-muted-foreground">Carregando pacientes...</div>
+              {isLoadingPatients || isLoadingAppointments ? (
+                <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-2">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <span>Carregando informações...</span>
+                </div>
               ) : patients?.length ? (
-                patients.map((patient) => (
-                  <div 
-                    key={patient.id}
-                    className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-blue-50/50 hover:border-blue-100 transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-primary font-bold text-lg border border-slate-100">
-                        {patient.name.charAt(0)}
+                patients.map((patient) => {
+                  const status = getPatientStatus(patient.id);
+                  const isPresent = status === 'presente';
+                  
+                  return (
+                    <div 
+                      key={patient.id}
+                      className="flex items-center justify-between p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-blue-50/50 hover:border-blue-100 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center text-primary font-bold text-lg border border-slate-100">
+                          {patient.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-900">{patient.name}</p>
+                          <p className="text-sm text-muted-foreground">CPF: {patient.cpf || "Não informado"}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-slate-900">{patient.name}</p>
-                        <p className="text-sm text-muted-foreground">CPF: {patient.cpf || "Não informado"}</p>
-                      </div>
+                      
+                      {isPresent ? (
+                        <div className="flex items-center gap-2 text-green-600 font-medium px-4 py-2 bg-green-50 rounded-lg">
+                          <CheckCircle2 className="w-5 h-5" />
+                          Presente
+                        </div>
+                      ) : (
+                        <Button 
+                          variant="ghost" 
+                          className="group-hover:translate-x-1 transition-transform"
+                          onClick={() => handleConfirmPresence(patient.id)}
+                          disabled={updateStatus.isPending}
+                        >
+                          {updateStatus.isPending ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          ) : (
+                            <>
+                              Confirmar Presença
+                              <ArrowRight className="w-4 h-4 ml-2" />
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
-                    <Button variant="ghost" className="group-hover:translate-x-1 transition-transform">
-                      Confirmar Presença
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                ))
+                  );
+                })
               ) : search ? (
                 <div className="text-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
                   <UserPlus className="w-12 h-12 text-slate-300 mx-auto mb-3" />
