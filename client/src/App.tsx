@@ -9,6 +9,7 @@ import LoginPage from "@/pages/login";
 import ReceptionDashboard from "@/pages/reception/dashboard";
 import AgendaPage from "@/pages/reception/agenda";
 import PatientDirectory from "@/pages/reception/patients";
+import CheckInPage from "@/pages/reception/checkin";
 import TeamManagement from "@/pages/admin/users";
 import ClinicsManagement from "@/pages/admin/clinics";
 import DoctorDashboard from "@/pages/doctor/dashboard";
@@ -55,6 +56,9 @@ function Router() {
       </Route>
       <Route path="/reception/patients">
         <ProtectedRoute component={PatientDirectory} allowedRoles={['operator', 'admin', 'doctor']} />
+      </Route>
+      <Route path="/reception/checkin">
+        <ProtectedRoute component={CheckInPage} allowedRoles={['operator', 'admin']} />
       </Route>
 
       {/* Doctor Routes */}
