@@ -32,6 +32,8 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
           { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
           { href: "/admin/users", label: "Gestão de Equipe", icon: Users },
           { href: "/admin/clinics", label: "Clínicas", icon: Building2 },
+          { href: "/admin/inventory", label: "Gestão de Estoque", icon: ClipboardList },
+          { href: "/admin/billing", label: "Faturamento TISS", icon: FileText },
         ];
       case "doctor":
         return [
@@ -47,6 +49,8 @@ export default function LayoutShell({ children }: { children: React.ReactNode })
           { href: "/reception/schedule", label: "Agenda Completa", icon: CalendarDays },
           { href: "/reception/patients", label: "Pacientes", icon: Users },
           { href: "/reception/checkin", label: "Check-in Rápido", icon: ClipboardList },
+          { href: "/admin/inventory", label: "Estoque", icon: ClipboardList },
+          { href: "/admin/billing", label: "Faturamento", icon: FileText },
         ];
       default:
         return [];
