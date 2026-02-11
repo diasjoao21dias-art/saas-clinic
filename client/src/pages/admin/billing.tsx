@@ -5,7 +5,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Download, Send, CheckCircle } from "lucide-react";
+import { FileText, Download, Send, CheckCircle, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function BillingPage() {
