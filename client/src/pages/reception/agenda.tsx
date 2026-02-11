@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertAppointmentSchema, type User, type AppointmentWithDetails } from "@shared/schema";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePatients } from "@/hooks/use-patients";
 import { useCreateAppointment } from "@/hooks/use-appointments";
@@ -182,7 +183,10 @@ export default function AgendaPage() {
       clinicId: 1,
       price: 150,
       type: "consulta",
-      examType: ""
+      examType: "",
+      procedure: "",
+      insurance: "",
+      isPrivate: false
     }
   });
 
@@ -199,7 +203,10 @@ export default function AgendaPage() {
         clinicId: editingAppointment.clinicId,
         price: editingAppointment.price / 100,
         type: (editingAppointment as any).type || "consulta",
-        examType: (editingAppointment as any).examType || ""
+        examType: (editingAppointment as any).examType || "",
+        procedure: (editingAppointment as any).procedure || "",
+        insurance: (editingAppointment as any).insurance || "",
+        isPrivate: (editingAppointment as any).isPrivate || false
       });
     } else {
       aptForm.reset({
@@ -213,7 +220,10 @@ export default function AgendaPage() {
         clinicId: 1,
         price: 150,
         type: "consulta",
-        examType: ""
+        examType: "",
+        procedure: "",
+        insurance: "",
+        isPrivate: false
       });
     }
   }, [editingAppointment]);
@@ -578,6 +588,67 @@ export default function AgendaPage() {
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={aptForm.control}
+                name="procedure"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Procedimento</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Limpeza, Canal, etc." {...field} value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex items-center space-x-2 py-2">
+                <FormField
+                  control={aptForm.control}
+                  name="isPrivate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            if (checked) {
+                              aptForm.setValue("insurance", "");
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Particular</FormLabel>
+                        <FormDescription>
+                          Marque se o atendimento for particular
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={aptForm.control}
+                name="insurance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Convênio</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Nome do convênio" 
+                        {...field} 
+                        value={field.value || ""} 
+                        disabled={aptForm.watch("isPrivate")}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
