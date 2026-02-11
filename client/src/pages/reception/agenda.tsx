@@ -1,5 +1,5 @@
 import LayoutShell from "@/components/layout-shell";
-import { Calendar, Users, Clock, AlertCircle, Plus, Trash2, Edit2 } from "lucide-react";
+import { Calendar, Users, Clock, AlertCircle, Plus, Trash2, Edit2, Loader2 } from "lucide-react";
 import { useAppointments } from "@/hooks/use-appointments";
 import { format, addMinutes, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,10 +8,12 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { insertAppointmentSchema, type User, type AppointmentWithDetails } from "@shared/schema";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePatients } from "@/hooks/use-patients";
 import { useCreateAppointment } from "@/hooks/use-appointments";
@@ -542,282 +544,307 @@ export default function AgendaPage() {
       </Dialog>
       
       <Dialog open={isAptDialogOpen} onOpenChange={setIsAptDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingAppointment ? "Editar Agendamento" : "Novo Agendamento"}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-slate-800">
+              {editingAppointment ? "Editar Agendamento" : "Novo Agendamento"}
+            </DialogTitle>
           </DialogHeader>
           <Form {...aptForm}>
-            <form onSubmit={aptForm.handleSubmit(onAptSubmit)} className="space-y-4">
-              <FormField
-                control={aptForm.control}
-                name="patientId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Paciente</FormLabel>
-                    <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value?.toString()}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um paciente" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {patients?.map(p => (
-                          <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={aptForm.control}
-                name="doctorId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Médico</FormLabel>
-                    <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value?.toString()}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um médico" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {doctors?.map(d => (
-                          <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <form onSubmit={aptForm.handleSubmit(onAptSubmit)} className="space-y-6">
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="basic">Informações Básicas</TabsTrigger>
+                  <TabsTrigger value="details">Detalhes</TabsTrigger>
+                  <TabsTrigger value="payment">Financeiro</TabsTrigger>
+                </TabsList>
 
-              <FormField
-                control={aptForm.control}
-                name="procedure"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Procedimento</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: Limpeza, Canal, etc." {...field} value={field.value || ""} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <TabsContent value="basic" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={aptForm.control}
+                      name="patientId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Paciente</FormLabel>
+                          <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value?.toString()}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione um paciente" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {patients?.map(p => (
+                                <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={aptForm.control}
+                      name="doctorId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Médico</FormLabel>
+                          <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value?.toString()}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione um médico" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {doctors?.map(d => (
+                                <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <div className="flex items-center space-x-2 py-2">
-                <FormField
-                  control={aptForm.control}
-                  name="isPrivate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={(checked) => {
-                            field.onChange(checked);
-                            if (checked) {
-                              aptForm.setValue("insurance", "");
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Particular</FormLabel>
-                        <FormDescription>
-                          Marque se o atendimento for particular
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={aptForm.control}
-                name="insurance"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Convênio</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Nome do convênio" 
-                        {...field} 
-                        value={field.value || ""} 
-                        disabled={aptForm.watch("isPrivate")}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={aptForm.control}
+                      name="date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={aptForm.control}
+                        name="startTime"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Horário</FormLabel>
+                            <FormControl>
+                              <Input type="time" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={aptForm.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Agendamento</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o tipo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="consulta">Consulta</SelectItem>
-                          <SelectItem value="retorno">Retorno</SelectItem>
-                          <SelectItem value="exame">Exame</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={aptForm.control}
-                  name="examType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nome do Exame (se aplicável)</FormLabel>
-                      <FormControl><Input {...field} placeholder="Ex: Hemograma" disabled={aptForm.watch("type") !== "exame"} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                      <FormField
+                        control={aptForm.control}
+                        name="duration"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Duração (min)</FormLabel>
+                            <FormControl>
+                              <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={aptForm.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data</FormLabel>
-                      <FormControl><Input type="date" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={aptForm.control}
-                  name="startTime"
-                  render={({ field }) => {
-                    const selectedDate = aptForm.watch("date");
-                    const selectedDoctor = aptForm.watch("doctorId");
-                    const isOccupied = isTimeSlotOccupied(field.value, selectedDate, selectedDoctor);
-                    
-                    return (
+                <TabsContent value="details" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={aptForm.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipo de Agendamento</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o tipo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="consulta">Consulta</SelectItem>
+                              <SelectItem value="retorno">Retorno</SelectItem>
+                              <SelectItem value="exame">Exame</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {aptForm.watch("type") === "exame" && (
+                      <FormField
+                        control={aptForm.control}
+                        name="examType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome do Exame</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Ex: Hemograma" {...field} value={field.value || ""} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+
+                  <FormField
+                    control={aptForm.control}
+                    name="procedure"
+                    render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex justify-between items-center">
-                          Horário 
-                          {isOccupied && <span className="text-[10px] text-destructive font-bold uppercase">Indisponível</span>}
-                        </FormLabel>
+                        <FormLabel>Procedimento</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="time" 
+                          <Input placeholder="Ex: Limpeza, Canal, etc." {...field} value={field.value || ""} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={aptForm.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Observações</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Notas adicionais sobre o agendamento..." 
+                            className="resize-none"
                             {...field} 
-                            className={isOccupied ? "border-destructive text-destructive" : ""}
+                            value={field.value || ""}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    );
-                  }}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={aptForm.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Valor da Consulta (R$)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          {...field} 
-                          onChange={e => field.onChange(e.target.value === "" ? "" : Number(e.target.value))} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={aptForm.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="agendado">Agendado</SelectItem>
-                          <SelectItem value="confirmado">Confirmado</SelectItem>
-                          <SelectItem value="presente">Presente</SelectItem>
-                          <SelectItem value="remarcado">Remarcado</SelectItem>
-                          <SelectItem value="ausente">Faltou</SelectItem>
-                          <SelectItem value="cancelado">Cancelado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={aptForm.control}
-                  name="duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Duração (min)</FormLabel>
-                      <FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="flex gap-2 pt-4">
+                    )}
+                  />
+                </TabsContent>
+
+                <TabsContent value="payment" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={aptForm.control}
+                      name="isPrivate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => {
+                                field.onChange(checked);
+                                if (checked) {
+                                  aptForm.setValue("insurance", "");
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Particular</FormLabel>
+                            <FormDescription>
+                              Sem uso de convênio
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={aptForm.control}
+                      name="insurance"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Convênio</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Nome do convênio" 
+                              {...field} 
+                              value={field.value || ""} 
+                              disabled={aptForm.watch("isPrivate")}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={aptForm.control}
+                      name="price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Valor (R$)</FormLabel>
+                          <FormControl>
+                            <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={aptForm.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione o status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="agendado">Agendado</SelectItem>
+                              <SelectItem value="confirmado">Confirmado</SelectItem>
+                              <SelectItem value="cancelado">Cancelado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              <DialogFooter className="flex gap-2 pt-4 border-t">
                 {editingAppointment && (
                   <Button 
                     type="button" 
                     variant="destructive" 
-                    className="flex-1 gap-2"
+                    className="flex-1"
                     onClick={() => {
-                      if (confirm("Tem certeza que deseja excluir este agendamento?")) {
+                      if (confirm("Deseja realmente excluir este agendamento?")) {
                         deleteAppointment.mutate(editingAppointment.id);
                       }
                     }}
+                    disabled={deleteAppointment.isPending}
                   >
-                    <Trash2 className="w-4 h-4" /> Excluir
+                    Excluir
                   </Button>
                 )}
-                <Button type="submit" className="flex-[2]" disabled={createAppointment.isPending || updateAppointment.isPending}>
-                  {(createAppointment.isPending || updateAppointment.isPending) ? "Processando..." : (editingAppointment ? "Salvar Alterações" : "Confirmar Agendamento")}
+                <Button 
+                  type="submit" 
+                  className="flex-[2]" 
+                  disabled={createAppointment.isPending || updateAppointment.isPending}
+                >
+                  {(createAppointment.isPending || updateAppointment.isPending) && (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  )}
+                  {editingAppointment ? "Salvar Alterações" : "Criar Agendamento"}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
-      
-      <style>{`
-        .fc { --fc-border-color: #e2e8f0; --fc-button-bg-color: #3b82f6; --fc-button-border-color: #3b82f6; --fc-button-hover-bg-color: #2563eb; }
-        .fc .fc-toolbar-title { font-size: 1.25rem; font-weight: 700; color: #0f172a; text-transform: capitalize; }
-        .fc .fc-col-header-cell-cushion { padding: 8px; color: #64748b; font-weight: 600; font-size: 0.875rem; }
-        .fc-timegrid-slot { height: 3rem !important; border-bottom: 1px solid #f1f5f9 !important; }
-        .fc-event { border-radius: 6px; border: none; padding: 2px 4px; font-size: 0.75rem; cursor: pointer; }
-        .blocked-day { background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px); }
-      `}</style>
     </LayoutShell>
   );
 }
