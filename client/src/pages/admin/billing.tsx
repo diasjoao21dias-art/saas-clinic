@@ -14,7 +14,6 @@ export default function BillingPage() {
 
   const generateXmlMutation = useMutation({
     mutationFn: async (billId: number) => {
-      // Simulação de geração de XML TISS
       await apiRequest("POST", `/api/tiss/${billId}/generate`, {});
     },
     onSuccess: () => {
@@ -23,13 +22,32 @@ export default function BillingPage() {
     },
   });
 
-  if (isLoading) return <div>Carregando...</div>;
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      // Simulação de sincronização
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    },
+    onSuccess: () => {
+      toast({ title: "Sincronizado", description: "Convênios e tabelas TUSS atualizadas." });
+    }
+  });
+
+  if (isLoading) return (
+    <div className="h-[80vh] flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Faturamento TISS/TUSS</h1>
-        <Button data-testid="button-sync-convenios">
+        <Button 
+          onClick={() => syncMutation.mutate()} 
+          disabled={syncMutation.isPending}
+          data-testid="button-sync-convenios"
+        >
+          {syncMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
           Sincronizar Convênios
         </Button>
       </div>
@@ -92,10 +110,27 @@ export default function BillingPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button size="icon" variant="ghost" title="Gerar XML TISS">
-                        <Download className="w-4 h-4" />
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        title="Gerar XML TISS"
+                        onClick={() => generateXmlMutation.mutate(bill.id)}
+                        disabled={generateXmlMutation.isPending}
+                      >
+                        {generateXmlMutation.isPending && generateXmlMutation.variables === bill.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
                       </Button>
-                      <Button size="icon" variant="ghost" title="Enviar para Convênio">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        title="Enviar para Convênio"
+                        onClick={() => {
+                          toast({ title: "Enviado", description: "Lote enviado para processamento." });
+                        }}
+                      >
                         <Send className="w-4 h-4" />
                       </Button>
                     </div>

@@ -43,8 +43,18 @@ export default function AttendPage() {
     enabled: !!appointmentId,
   });
 
-  const createRecord = useCreateMedicalRecord();
-  const updateStatus = useUpdateAppointmentStatus();
+  const signMutation = useMutation({
+    mutationFn: async ({ recordId, hash }: { recordId: number, hash: string }) => {
+      await apiRequest("POST", `/api/medical-records/${recordId}/sign`, {
+        hash,
+        certificate: "ICP-Brasil Standard v2.1"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.medicalRecords.listByPatient.path, appointment.patientId] });
+      toast({ title: "Assinado", description: "Prontuário assinado digitalmente com sucesso." });
+    }
+  });
 
   const form = useForm<InsertMedicalRecord>({
     resolver: zodResolver(insertMedicalRecordSchema),
@@ -68,28 +78,8 @@ export default function AttendPage() {
     }
   });
 
-  if (isLoading || !appointment) {
-    return (
-      <LayoutShell>
-        <div className="h-[80vh] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </LayoutShell>
-    );
-  }
-
-  const signMutation = useMutation({
-    mutationFn: async ({ recordId, hash }: { recordId: number, hash: string }) => {
-      await apiRequest("POST", `/api/medical-records/${recordId}/sign`, {
-        hash,
-        certificate: "ICP-Brasil Standard v2.1"
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.medicalRecords.listByPatient.path, appointment.patientId] });
-      toast({ title: "Assinado", description: "Prontuário assinado digitalmente com sucesso." });
-    }
-  });
+  const createRecord = useCreateMedicalRecord();
+  const updateStatus = useUpdateAppointmentStatus();
 
   const onSubmit = async (data: InsertMedicalRecord) => {
     const payload = {
