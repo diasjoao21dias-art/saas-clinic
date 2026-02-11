@@ -50,11 +50,11 @@ export default function CheckInPage() {
   };
 
   const statusMap: Record<string, { label: string; color: string; icon: any }> = {
-    'agendado': { label: 'Agendado', color: 'bg-blue-100 text-blue-700', icon: Clock },
-    'presente': { label: 'Aguardando', color: 'bg-orange-100 text-orange-700', icon: User },
-    'em_atendimento': { label: 'Em Atendimento', color: 'bg-purple-100 text-purple-700', icon: Loader2 },
-    'finalizado': { label: 'Finalizado', color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
-    'cancelado': { label: 'Cancelado', color: 'bg-red-100 text-red-700', icon: AlertCircle },
+    'agendado': { label: 'Agendado', color: 'bg-blue-50 text-blue-700 border-blue-200', icon: Clock },
+    'presente': { label: 'Aguardando', color: 'bg-orange-50 text-orange-700 border-orange-200', icon: User },
+    'em_atendimento': { label: 'Em Atendimento', color: 'bg-purple-50 text-purple-700 border-purple-200', icon: Loader2 },
+    'finalizado': { label: 'Finalizado', color: 'bg-green-50 text-green-700 border-green-200', icon: CheckCircle2 },
+    'cancelado': { label: 'Cancelado', color: 'bg-red-50 text-red-700 border-red-200', icon: AlertCircle },
   };
 
   return (
@@ -113,27 +113,32 @@ export default function CheckInPage() {
                       >
                         <div className="flex items-center gap-5">
                           <div className="relative">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-xl border border-primary/10 shadow-sm">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent flex items-center justify-center text-primary font-bold text-xl border border-primary/20 shadow-sm transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
                               {patient.name.charAt(0)}
                             </div>
                             {apt && (
-                              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-sm">
-                                <Calendar className="w-3 h-3 text-primary" />
+                              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-slate-100 flex items-center justify-center shadow-md">
+                                <Calendar className="w-3.5 h-3.5 text-primary" />
                               </div>
                             )}
                           </div>
                           
                           <div className="space-y-1">
-                            <h3 className="font-bold text-slate-900 text-lg group-hover:text-primary transition-colors">
-                              {patient.name}
-                            </h3>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
-                              <span className="flex items-center gap-1.5">
-                                <Phone className="w-3.5 h-3.5" />
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-slate-900 text-lg group-hover:text-primary transition-colors">
+                                {patient.name}
+                              </h3>
+                              {apt?.status === 'presente' && (
+                                <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 font-medium">
+                              <span className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-default">
+                                <Phone className="w-3.5 h-3.5 text-slate-400" />
                                 {patient.phone || "Sem telefone"}
                               </span>
-                              <span className="flex items-center gap-1.5">
-                                <Users className="w-3.5 h-3.5" />
+                              <span className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-default">
+                                <User className="w-3.5 h-3.5 text-slate-400" />
                                 CPF: {patient.cpf || "---"}
                               </span>
                             </div>
@@ -143,20 +148,33 @@ export default function CheckInPage() {
                         <div className="flex items-center gap-3">
                           {apt ? (
                             <div className="flex items-center gap-4">
-                              <div className="text-right hidden sm:block">
-                                <p className="text-sm font-bold text-slate-700">{apt.startTime}</p>
-                                <p className="text-xs text-slate-400">Dr. {apt.doctor.name}</p>
+                              <div className="text-right hidden sm:block border-r border-slate-100 pr-4">
+                                <p className="text-sm font-bold text-slate-800 flex items-center justify-end gap-1.5">
+                                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                  {apt.startTime}
+                                </p>
+                                <p className="text-xs text-slate-500 font-medium">Dr. {apt.doctor.name}</p>
                               </div>
                               
-                              <Badge className={cn("px-3 py-1 rounded-lg border-none shadow-none font-semibold flex items-center gap-1.5", statusInfo?.color)}>
-                                {statusInfo && <statusInfo.icon className="w-3.5 h-3.5" />}
+                              <Badge 
+                                variant="outline"
+                                className={cn(
+                                  "px-3 py-1.5 rounded-xl border-2 font-bold flex items-center gap-1.5 transition-all duration-300", 
+                                  apt.status === 'agendado' && "bg-blue-50/50 border-blue-200 text-blue-700",
+                                  apt.status === 'presente' && "bg-orange-50/50 border-orange-200 text-orange-700 shadow-sm shadow-orange-100",
+                                  apt.status === 'em_atendimento' && "bg-purple-50/50 border-purple-200 text-purple-700",
+                                  apt.status === 'finalizado' && "bg-green-50/50 border-green-200 text-green-700",
+                                  apt.status === 'cancelado' && "bg-red-50/50 border-red-200 text-red-700",
+                                )}
+                              >
+                                {statusInfo && <statusInfo.icon className={cn("w-3.5 h-3.5", apt.status === 'em_atendimento' && "animate-spin")} />}
                                 {statusInfo?.label}
                               </Badge>
 
                               {canCheckIn ? (
                                 <Button 
                                   size="sm"
-                                  className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 active:scale-95 transition-all"
+                                  className="h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 active:scale-95 transition-all font-bold group/btn"
                                   onClick={() => handleConfirmPresence(patient.id)}
                                   disabled={updateStatus.isPending}
                                 >
@@ -165,21 +183,24 @@ export default function CheckInPage() {
                                   ) : (
                                     <>
                                       Confirmar Presença
-                                      <ArrowRight className="w-4 h-4 ml-2" />
+                                      <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                                     </>
                                   )}
                                 </Button>
                               ) : apt.status === 'presente' ? (
-                                <div className="h-10 px-4 rounded-xl bg-green-50 text-green-600 flex items-center gap-2 font-bold text-sm border border-green-100">
+                                <div className="h-10 px-4 rounded-xl bg-green-50 text-green-600 flex items-center gap-2 font-bold text-sm border border-green-100 shadow-sm">
                                   <CheckCircle2 className="w-4 h-4" />
                                   Confirmado
                                 </div>
                               ) : null}
                             </div>
                           ) : (
-                            <div className="flex flex-col items-end gap-1">
-                              <Badge variant="outline" className="text-slate-400 border-slate-200">Sem agendamento hoje</Badge>
-                              <Button variant="link" className="h-auto p-0 text-xs text-primary font-bold">Criar Encaixe</Button>
+                            <div className="flex flex-col items-end gap-1.5">
+                              <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none font-medium">Sem agendamento hoje</Badge>
+                              <Button variant="link" className="h-auto p-0 text-xs text-primary font-bold hover:no-underline hover:text-primary/80 transition-colors">
+                                <UserPlus className="w-3 h-3 mr-1" />
+                                Criar Encaixe
+                              </Button>
                             </div>
                           )}
                         </div>
