@@ -197,7 +197,7 @@ export default function CheckInPage() {
                           ) : (
                             <div className="flex flex-col items-end gap-1.5">
                               <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none font-medium">Sem agendamento hoje</Badge>
-                              <Button variant="link" className="h-auto p-0 text-xs text-primary font-bold hover:no-underline hover:text-primary/80 transition-colors">
+                              <Button variant="ghost" className="h-auto p-0 text-xs text-primary font-bold hover:no-underline hover:text-primary/80 transition-colors">
                                 <UserPlus className="w-3 h-3 mr-1" />
                                 Criar Encaixe
                               </Button>
@@ -217,7 +217,7 @@ export default function CheckInPage() {
                   <p className="text-slate-500 max-w-sm mx-auto mb-8">
                     Não encontramos nenhum registro com os dados informados. Deseja realizar um novo cadastro?
                   </p>
-                  <Button size="lg" className="rounded-2xl px-8 shadow-xl shadow-primary/20">
+                  <Button size="lg" variant="default" className="rounded-2xl px-8 shadow-xl shadow-primary/20">
                     <UserPlus className="w-5 h-5 mr-2" />
                     Cadastrar Novo Paciente
                   </Button>
