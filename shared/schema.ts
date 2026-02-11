@@ -52,6 +52,9 @@ export const appointments = pgTable("appointments", {
   status: text("status").default("agendado").notNull(), // agendado, confirmado, presente, em_atendimento, finalizado, cancelado, remarcado, ausente
   paymentMethod: text("payment_method"), // dinheiro, cartao_credito, cartao_debito, pix, convenio
   paymentStatus: text("payment_status").default("pendente").notNull(), // pendente, pago
+  procedure: text("procedure"),
+  insurance: text("insurance"),
+  isPrivate: boolean("is_private").default(false).notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
