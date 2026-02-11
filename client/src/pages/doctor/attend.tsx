@@ -43,30 +43,6 @@ export default function AttendPage() {
     enabled: !!appointmentId,
   });
 
-  if (isLoading) {
-    return (
-      <LayoutShell>
-        <div className="h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </LayoutShell>
-    );
-  }
-
-  if (!appointment || !appointment.patient) {
-    return (
-      <LayoutShell>
-        <div className="p-8 text-center">
-          <h2 className="text-xl font-bold text-slate-900">Agendamento ou Paciente não encontrado</h2>
-          <p className="text-muted-foreground mt-2">Verifique se o agendamento existe e tente novamente.</p>
-          <Button onClick={() => window.history.back()} className="mt-4">
-            Voltar
-          </Button>
-        </div>
-      </LayoutShell>
-    );
-  }
-
   const signMutation = useMutation({
     mutationFn: async ({ recordId, hash }: { recordId: number, hash: string }) => {
       await apiRequest("POST", `/api/medical-records/${recordId}/sign`, {
@@ -75,7 +51,9 @@ export default function AttendPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.medicalRecords.listByPatient.path, appointment.patientId] });
+      if (appointment?.patientId) {
+        queryClient.invalidateQueries({ queryKey: [api.medicalRecords.listByPatient.path, appointment.patientId] });
+      }
       toast({ title: "Assinado", description: "Prontuário assinado digitalmente com sucesso." });
     }
   });
@@ -104,6 +82,30 @@ export default function AttendPage() {
 
   const createRecord = useCreateMedicalRecord();
   const updateStatus = useUpdateAppointmentStatus();
+
+  if (isLoading) {
+    return (
+      <LayoutShell>
+        <div className="h-screen flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </LayoutShell>
+    );
+  }
+
+  if (!appointment || !appointment.patient) {
+    return (
+      <LayoutShell>
+        <div className="p-8 text-center">
+          <h2 className="text-xl font-bold text-slate-900">Agendamento ou Paciente não encontrado</h2>
+          <p className="text-muted-foreground mt-2">Verifique se o agendamento existe e tente novamente.</p>
+          <Button onClick={() => window.history.back()} className="mt-4">
+            Voltar
+          </Button>
+        </div>
+      </LayoutShell>
+    );
+  }
 
   const onSubmit = async (data: InsertMedicalRecord) => {
     const payload = {
