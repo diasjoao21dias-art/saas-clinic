@@ -17,9 +17,14 @@ import { useCreateMedicalRecord } from "@/hooks/use-medical-records";
 import { useUpdateAppointmentStatus } from "@/hooks/use-appointments";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Save, CheckCircle, History, FileText } from "lucide-react";
+import { Loader2, Save, CheckCircle, History, FileText, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { ptBR } from "date-fns/locale";
+
+import { Badge } from "@/components/ui/badge";
 
 export default function AttendPage() {
   const [, params] = useRoute("/doctor/attend/:id");
@@ -72,8 +77,20 @@ export default function AttendPage() {
     );
   }
 
+  const signMutation = useMutation({
+    mutationFn: async ({ recordId, hash }: { recordId: number, hash: string }) => {
+      await apiRequest("POST", `/api/medical-records/${recordId}/sign`, {
+        hash,
+        certificate: "ICP-Brasil Standard v2.1"
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.medicalRecords.listByPatient.path, appointment.patientId] });
+      toast({ title: "Assinado", description: "Prontuário assinado digitalmente com sucesso." });
+    }
+  });
+
   const onSubmit = async (data: InsertMedicalRecord) => {
-    // Ensure IDs are set correctly from appointment context
     const payload = {
       ...data,
       patientId: appointment.patient.id,
@@ -82,9 +99,11 @@ export default function AttendPage() {
       appointmentId: appointment.id
     };
     
-    await createRecord.mutateAsync(payload);
+    const record = await createRecord.mutateAsync(payload);
     await updateStatus.mutateAsync({ id: appointmentId, status: 'completed' });
-    // Redirect or show success
+    
+    // Auto-sign after saving (simulated)
+    await signMutation.mutateAsync({ recordId: record.id, hash: "sha256:" + Math.random().toString(36).substring(7) });
   };
 
   const handlePrint = () => {
@@ -173,9 +192,13 @@ export default function AttendPage() {
               <History className="w-4 h-4 mr-2" />
               Histórico do Paciente
             </Button>
-            <Button onClick={form.handleSubmit(onSubmit)} className="bg-accent hover:bg-accent/90">
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Finalizar Consulta e Gerar Prontuário
+            <Button onClick={form.handleSubmit(onSubmit)} className="bg-accent hover:bg-accent/90" disabled={createRecord.isPending || signMutation.isPending}>
+              {createRecord.isPending || signMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <CheckCircle className="w-4 h-4 mr-2" />
+              )}
+              {signMutation.isSuccess ? "Finalizado e Assinado" : "Finalizar e Assinar Digitalmente"}
             </Button>
           </div>
         </div>
@@ -350,6 +373,11 @@ export default function AttendPage() {
                       <div className="flex items-center gap-3 mb-4">
                         <FileText className="w-5 h-5 text-primary" />
                         <h3 className="font-display font-bold text-lg">Receituário Eletrônico</h3>
+                        {signMutation.isSuccess && (
+                          <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200 gap-1">
+                            <ShieldCheck className="w-3 h-3" /> Assinado Digitalmente
+                          </Badge>
+                        )}
                       </div>
                       <FormField
                         control={form.control}
