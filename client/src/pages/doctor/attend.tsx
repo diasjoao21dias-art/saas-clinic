@@ -175,7 +175,7 @@ export default function AttendPage() {
             </Button>
             <Button onClick={form.handleSubmit(onSubmit)} className="bg-accent hover:bg-accent/90">
               <CheckCircle className="w-4 h-4 mr-2" />
-              Finalizar Consulta
+              Finalizar Consulta e Gerar Prontuário
             </Button>
           </div>
         </div>

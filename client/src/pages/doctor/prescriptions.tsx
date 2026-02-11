@@ -37,8 +37,8 @@ export default function PrescriptionsPage() {
     <LayoutShell>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-display font-bold text-slate-900">Modelos de Receita</h1>
-          <p className="text-muted-foreground mt-1">Gerencie e utilize seus modelos de prescrição médica.</p>
+          <h1 className="text-3xl font-display font-bold text-slate-900">Prescrição Eletrônica</h1>
+          <p className="text-muted-foreground mt-1">Gerencie modelos de prescrição e emita receitas digitais para seus pacientes.</p>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 justify-between">
