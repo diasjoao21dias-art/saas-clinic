@@ -14,6 +14,48 @@ export const clinics = pgTable("clinics", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const inventory = pgTable("inventory", {
+  id: serial("id").primaryKey(),
+  clinicId: integer("clinic_id").references(() => clinics.id).notNull(),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // 'material', 'medicamento'
+  unit: text("unit").notNull(), // 'unidade', 'ml', 'mg', 'caixa'
+  quantity: integer("quantity").default(0).notNull(),
+  minQuantity: integer("min_quantity").default(5).notNull(),
+  pricePerUnit: integer("price_per_unit").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const inventoryTransactions = pgTable("inventory_transactions", {
+  id: serial("id").primaryKey(),
+  inventoryId: integer("inventory_id").references(() => inventory.id).notNull(),
+  type: text("type").notNull(), // 'entrada', 'saida', 'baixa_automatica'
+  quantity: integer("quantity").notNull(),
+  appointmentId: integer("appointment_id").references(() => appointments.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const tissBills = pgTable("tiss_bills", {
+  id: serial("id").primaryKey(),
+  clinicId: integer("clinic_id").references(() => clinics.id).notNull(),
+  appointmentId: integer("appointment_id").references(() => appointments.id).notNull(),
+  patientId: integer("patient_id").references(() => patients.id).notNull(),
+  insuranceId: text("insurance_id").notNull(),
+  status: text("status").default("pendente").notNull(), // pendente, gerada, enviada, paga
+  xmlData: text("xml_data"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const digitalSignatures = pgTable("digital_signatures", {
+  id: serial("id").primaryKey(),
+  medicalRecordId: integer("medical_record_id").references(() => medicalRecords.id).notNull(),
+  doctorId: integer("doctor_id").references(() => users.id).notNull(),
+  signatureHash: text("signature_hash").notNull(),
+  certificateInfo: text("certificate_info"),
+  signedAt: timestamp("signed_at").defaultNow(),
+});
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -103,43 +145,30 @@ export const clinicsRelations = relations(clinics, ({ many }) => ({
   users: many(users),
   patients: many(patients),
   appointments: many(appointments),
+  inventory: many(inventory),
+  tissBills: many(tissBills),
 }));
 
-export const usersRelations = relations(users, ({ one, many }) => ({
+export const inventoryRelations = relations(inventory, ({ one, many }) => ({
   clinic: one(clinics, {
-    fields: [users.clinicId],
+    fields: [inventory.clinicId],
     references: [clinics.id],
   }),
-  doctorAppointments: many(appointments, { relationName: "doctorAppointments" }),
-  recordsAuthored: many(medicalRecords, { relationName: "doctorRecords" }),
+  transactions: many(inventoryTransactions),
 }));
 
-export const patientsRelations = relations(patients, ({ one, many }) => ({
-  clinic: one(clinics, {
-    fields: [patients.clinicId],
-    references: [clinics.id],
+export const tissBillsRelations = relations(tissBills, ({ one }) => ({
+  appointment: one(appointments, {
+    fields: [tissBills.appointmentId],
+    references: [appointments.id],
   }),
-  appointments: many(appointments),
-  medicalRecords: many(medicalRecords),
-}));
-
-export const appointmentsRelations = relations(appointments, ({ one }) => ({
   patient: one(patients, {
-    fields: [appointments.patientId],
+    fields: [tissBills.patientId],
     references: [patients.id],
   }),
-  doctor: one(users, {
-    fields: [appointments.doctorId],
-    references: [users.id],
-    relationName: "doctorAppointments",
-  }),
-  clinic: one(clinics, {
-    fields: [appointments.clinicId],
-    references: [clinics.id],
-  }),
 }));
 
-export const medicalRecordsRelations = relations(medicalRecords, ({ one }) => ({
+export const medicalRecordsRelations = relations(medicalRecords, ({ one, many }) => ({
   appointment: one(appointments, {
     fields: [medicalRecords.appointmentId],
     references: [appointments.id],
@@ -153,6 +182,16 @@ export const medicalRecordsRelations = relations(medicalRecords, ({ one }) => ({
     references: [users.id],
     relationName: "doctorRecords",
   }),
+  signatures: many(digitalSignatures),
+}));
+
+export const usersRelations = relations(users, ({ one, many }) => ({
+  clinic: one(clinics, {
+    fields: [users.clinicId],
+    references: [clinics.id],
+  }),
+  doctorAppointments: many(appointments, { relationName: "doctorAppointments" }),
+  recordsAuthored: many(medicalRecords, { relationName: "doctorRecords" }),
 }));
 
 // === SCHEMAS ===
@@ -162,6 +201,10 @@ export const insertUserSchema = createInsertSchema(users).omit({ id: true, creat
 export const insertPatientSchema = createInsertSchema(patients).omit({ id: true, createdAt: true });
 export const insertAppointmentSchema = createInsertSchema(appointments).omit({ id: true, createdAt: true });
 export const insertMedicalRecordSchema = createInsertSchema(medicalRecords).omit({ id: true, createdAt: true });
+export const insertInventorySchema = createInsertSchema(inventory).omit({ id: true, createdAt: true });
+export const insertInventoryTransactionSchema = createInsertSchema(inventoryTransactions).omit({ id: true, createdAt: true });
+export const insertTissBillSchema = createInsertSchema(tissBills).omit({ id: true, createdAt: true });
+export const insertDigitalSignatureSchema = createInsertSchema(digitalSignatures).omit({ id: true, signedAt: true });
 export const insertAvailabilityExceptionSchema = createInsertSchema(availabilityExceptions).omit({ id: true, createdAt: true });
 
 // === EXPLICIT TYPES ===
@@ -171,7 +214,16 @@ export type User = typeof users.$inferSelect;
 export type Patient = typeof patients.$inferSelect;
 export type Appointment = typeof appointments.$inferSelect;
 export type MedicalRecord = typeof medicalRecords.$inferSelect;
+export type Inventory = typeof inventory.$inferSelect;
+export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
+export type TissBill = typeof tissBills.$inferSelect;
+export type DigitalSignature = typeof digitalSignatures.$inferSelect;
 export type AvailabilityException = typeof availabilityExceptions.$inferSelect;
+
+export type InsertInventory = z.infer<typeof insertInventorySchema>;
+export type InsertInventoryTransaction = z.infer<typeof insertInventoryTransactionSchema>;
+export type InsertTissBill = z.infer<typeof insertTissBillSchema>;
+export type InsertDigitalSignature = z.infer<typeof insertDigitalSignatureSchema>;
 export type InsertAvailabilityException = z.infer<typeof insertAvailabilityExceptionSchema>;
 
 export type InsertClinic = z.infer<typeof insertClinicSchema>;
