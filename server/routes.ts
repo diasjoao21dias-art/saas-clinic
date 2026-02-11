@@ -105,8 +105,16 @@ export async function registerRoutes(
   });
 
   app.put(api.patients.update.path, requireAuth, async (req, res) => {
-    const updated = await storage.updatePatient(Number(req.params.id), req.body);
-    res.json(updated);
+    try {
+      const input = api.patients.update.input.parse(req.body);
+      const updated = await storage.updatePatient(Number(req.params.id), input);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      res.status(500).json({ message: "Erro ao atualizar paciente" });
+    }
   });
 
   // Appointments

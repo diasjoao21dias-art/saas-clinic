@@ -59,3 +59,30 @@ export function useCreatePatient() {
     },
   });
 }
+
+export function useUpdatePatient() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, patient }: { id: number; patient: Partial<InsertPatient> }) => {
+      const url = buildUrl(api.patients.update.path, { id });
+      const res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patient),
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to update patient");
+      }
+      return api.patients.update.responses[200].parse(await res.json());
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [api.patients.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.patients.get.path, variables.id] });
+    },
+  });
+}

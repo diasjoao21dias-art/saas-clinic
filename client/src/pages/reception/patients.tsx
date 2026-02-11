@@ -1,15 +1,15 @@
 import LayoutShell from "@/components/layout-shell";
-import { usePatients, useCreatePatient, usePatient } from "@/hooks/use-patients";
+import { usePatients, useCreatePatient, usePatient, useUpdatePatient } from "@/hooks/use-patients";
 import { useMedicalRecords } from "@/hooks/use-medical-records";
 import { useAppointments } from "@/hooks/use-appointments";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, User, ArrowLeft, Phone, Mail, Calendar, MapPin, Contact, FileText, Activity } from "lucide-react";
-import { useState } from "react";
+import { Search, Plus, User, ArrowLeft, Phone, Mail, Calendar, MapPin, Contact, FileText, Activity, Pencil } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPatientSchema } from "@shared/schema";
@@ -17,13 +17,17 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ptBR } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PatientDirectory() {
   const [search, setSearch] = useState("");
   const { data: patients, isLoading } = usePatients(search);
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
   const createPatient = useCreatePatient();
+  const updatePatient = useUpdatePatient();
+  const { toast } = useToast();
 
   const { data: selectedPatient, isLoading: isLoadingPatient } = usePatient(selectedPatientId || 0);
   const { data: medicalRecords } = useMedicalRecords(selectedPatientId || 0);
@@ -43,10 +47,57 @@ export default function PatientDirectory() {
     }
   });
 
+  const editForm = useForm<z.infer<typeof insertPatientSchema>>({
+    resolver: zodResolver(insertPatientSchema),
+    defaultValues: {
+      name: "",
+      cpf: "",
+      birthDate: "",
+      phone: "",
+      email: "",
+      gender: "",
+      address: "",
+      clinicId: 1,
+    }
+  });
+
+  useEffect(() => {
+    if (selectedPatient && editOpen) {
+      editForm.reset({
+        name: selectedPatient.name,
+        cpf: selectedPatient.cpf || "",
+        birthDate: selectedPatient.birthDate,
+        phone: selectedPatient.phone || "",
+        email: selectedPatient.email || "",
+        gender: selectedPatient.gender || "",
+        address: selectedPatient.address || "",
+        clinicId: selectedPatient.clinicId,
+      });
+    }
+  }, [selectedPatient, editOpen, editForm]);
+
   const onSubmit = async (data: z.infer<typeof insertPatientSchema>) => {
     await createPatient.mutateAsync(data);
     setOpen(false);
     form.reset();
+  };
+
+  const onEditSubmit = async (data: z.infer<typeof insertPatientSchema>) => {
+    if (!selectedPatientId) return;
+    try {
+      await updatePatient.mutateAsync({ id: selectedPatientId, patient: data });
+      setEditOpen(false);
+      toast({
+        title: "Sucesso",
+        description: "Dados do paciente atualizados com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar os dados do paciente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePrintPrescription = (prescription: string, doctorName: string) => {
@@ -120,8 +171,115 @@ export default function PatientDirectory() {
             <Card className="lg:col-span-1 border-none shadow-sm h-fit">
               <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold">
-                    {selectedPatient.name.charAt(0)}
+                  <div className="relative group">
+                    <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold">
+                      {selectedPatient.name.charAt(0)}
+                    </div>
+                    <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          size="icon" 
+                          variant="secondary" 
+                          className="absolute bottom-0 right-0 rounded-full shadow-md"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>Editar Paciente</DialogTitle>
+                          <DialogDescription>Atualize as informações cadastrais do paciente.</DialogDescription>
+                        </DialogHeader>
+                        <Form {...editForm}>
+                          <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={editForm.control}
+                                name="name"
+                                render={({ field }) => (
+                                  <FormItem className="col-span-2">
+                                    <FormLabel>Nome Completo</FormLabel>
+                                    <FormControl><Input {...field} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={editForm.control}
+                                name="cpf"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>CPF</FormLabel>
+                                    <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={editForm.control}
+                                name="birthDate"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Data de Nascimento</FormLabel>
+                                    <FormControl><Input type="date" {...field} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={editForm.control}
+                                name="phone"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Telefone</FormLabel>
+                                    <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={editForm.control}
+                                name="email"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl><Input type="email" {...field} value={field.value || ""} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={editForm.control}
+                                name="gender"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Gênero</FormLabel>
+                                    <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={editForm.control}
+                                name="address"
+                                render={({ field }) => (
+                                  <FormItem className="col-span-2">
+                                    <FormLabel>Endereço</FormLabel>
+                                    <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            <DialogFooter>
+                              <Button type="submit" disabled={updatePatient.isPending}>
+                                {updatePatient.isPending ? "Salvando..." : "Salvar Alterações"}
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold">{selectedPatient.name}</h2>
