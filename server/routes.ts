@@ -118,6 +118,7 @@ export async function registerRoutes(
       endDate: req.query.endDate as string,
       date: req.query.date as string,
       doctorId: req.query.doctorId ? Number(req.query.doctorId) : undefined,
+      patientId: req.query.patientId ? Number(req.query.patientId) : undefined,
       status: req.query.status as string,
     });
     res.json(appointments);

@@ -8,6 +8,7 @@ interface AppointmentFilters {
   startDate?: string;
   endDate?: string;
   doctorId?: number;
+  patientId?: number;
   status?: string;
 }
 
@@ -22,6 +23,7 @@ export function useAppointments(filters?: AppointmentFilters) {
         if (filters.startDate) params.append("startDate", filters.startDate);
         if (filters.endDate) params.append("endDate", filters.endDate);
         if (filters.doctorId) params.append("doctorId", filters.doctorId.toString());
+        if (filters.patientId) params.append("patientId", filters.patientId.toString());
         if (filters.status) params.append("status", filters.status);
         url += `?${params.toString()}`;
       }

@@ -110,7 +110,7 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]> {
+  async getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; patientId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]> {
     const conditions = [eq(appointments.clinicId, clinicId), sql`${appointments.status} != 'cancelado'`];
     
     if (filters?.date) {
@@ -121,6 +121,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (filters?.doctorId) conditions.push(eq(appointments.doctorId, filters.doctorId));
+    if (filters?.patientId) conditions.push(eq(appointments.patientId, filters.patientId));
     if (filters?.status) conditions.push(eq(appointments.status, filters.status));
 
     const result = await db.select({

@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl, type InsertMedicalRecord } from "@shared/routes";
+import { api, buildUrl } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
+import type { InsertMedicalRecord } from "@shared/schema";
 
-export function usePatientRecords(patientId: number) {
+export function useMedicalRecords(patientId: number) {
   return useQuery({
     queryKey: [api.medicalRecords.listByPatient.path, patientId],
     queryFn: async () => {

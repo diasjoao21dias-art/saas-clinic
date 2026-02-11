@@ -227,7 +227,7 @@ export default function PatientDirectory() {
 
                 <TabsContent value="records" className="mt-6">
                   <div className="space-y-4">
-                    {medicalRecords?.map((record) => (
+                    {medicalRecords?.map((record: any) => (
                       <Card key={record.id} className="border-none shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                           <CardTitle className="text-sm font-medium">
@@ -269,7 +269,7 @@ export default function PatientDirectory() {
 
                 <TabsContent value="prescriptions" className="mt-6">
                   <div className="space-y-4">
-                    {medicalRecords?.filter(r => r.prescription).map((record) => (
+                    {medicalRecords?.filter((r: any) => r.prescription).map((record: any) => (
                       <Card key={record.id} className="border-none shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                           <CardTitle className="text-sm font-medium">
@@ -292,7 +292,7 @@ export default function PatientDirectory() {
                         </CardContent>
                       </Card>
                     ))}
-                    {!medicalRecords?.some(r => r.prescription) && (
+                    {!medicalRecords?.some((r: any) => r.prescription) && (
                       <Card className="border-none shadow-sm">
                         <CardContent className="py-8 text-center text-muted-foreground">
                           Nenhuma prescrição encontrada para este paciente.
