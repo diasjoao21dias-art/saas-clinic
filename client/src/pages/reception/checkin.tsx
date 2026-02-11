@@ -14,33 +14,82 @@ import {
   Calendar, 
   Clock, 
   Phone,
-  AlertCircle
+  AlertCircle,
+  CreditCard,
+  Banknote,
+  QrCode
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { usePatients } from "@/hooks/use-patients";
 import { useAppointments, useUpdateAppointmentStatus } from "@/hooks/use-appointments";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CheckInPage() {
   const [search, setSearch] = useState("");
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [paymentMethod, setPaymentMethod] = useState("pix");
+  
+  const { toast } = useToast();
   const { data: patients, isLoading: isLoadingPatients } = usePatients(search);
   
   const today = format(new Date(), 'yyyy-MM-dd');
   const { data: appointments, isLoading: isLoadingAppointments } = useAppointments({ date: today });
   const updateStatus = useUpdateAppointmentStatus();
 
-  const handleConfirmPresence = async (patientId: number) => {
+  const handleOpenPayment = (patientId: number) => {
     const appointment = appointments?.find(apt => 
       apt.patientId === patientId && 
       !['cancelado', 'finalizado', 'presente'].includes(apt.status)
     );
 
     if (appointment) {
+      setSelectedAppointment(appointment);
+      setIsPaymentModalOpen(true);
+    }
+  };
+
+  const handleConfirmCheckin = async () => {
+    if (!selectedAppointment) return;
+
+    try {
       await updateStatus.mutateAsync({ 
-        id: appointment.id, 
-        status: 'presente' 
+        id: selectedAppointment.id, 
+        status: 'presente',
+        paymentMethod,
+        paymentStatus: 'pago'
+      });
+      
+      setIsPaymentModalOpen(false);
+      setSelectedAppointment(null);
+      
+      toast({
+        title: "Check-in realizado",
+        description: "O paciente foi marcado como presente e o pagamento registrado.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao realizar check-in",
+        description: "Ocorreu um problema ao processar a solicitação.",
       });
     }
   };
@@ -87,6 +136,7 @@ export default function CheckInPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   autoFocus
+                  data-testid="input-search-patient"
                 />
               </div>
             </div>
@@ -110,6 +160,7 @@ export default function CheckInPage() {
                       <div 
                         key={patient.id}
                         className="p-6 hover:bg-slate-50/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                        data-testid={`row-patient-${patient.id}`}
                       >
                         <div className="flex items-center gap-5">
                           <div className="relative">
@@ -175,8 +226,9 @@ export default function CheckInPage() {
                                 <Button 
                                   size="sm"
                                   className="h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 active:scale-95 transition-all font-bold group/btn"
-                                  onClick={() => handleConfirmPresence(patient.id)}
+                                  onClick={() => handleOpenPayment(patient.id)}
                                   disabled={updateStatus.isPending}
+                                  data-testid={`button-checkin-${patient.id}`}
                                 >
                                   {updateStatus.isPending ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -197,7 +249,7 @@ export default function CheckInPage() {
                           ) : (
                             <div className="flex flex-col items-end gap-1.5">
                               <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none font-medium">Sem agendamento hoje</Badge>
-                              <Button variant="ghost" className="h-auto p-0 text-xs text-primary font-bold hover:no-underline hover:text-primary/80 transition-colors">
+                              <Button variant="ghost" className="h-auto p-0 text-xs text-primary font-bold hover:no-underline hover:text-primary/80 transition-colors" data-testid={`button-walkin-${patient.id}`}>
                                 <UserPlus className="w-3 h-3 mr-1" />
                                 Criar Encaixe
                               </Button>
@@ -217,7 +269,7 @@ export default function CheckInPage() {
                   <p className="text-slate-500 max-w-sm mx-auto mb-8">
                     Não encontramos nenhum registro com os dados informados. Deseja realizar um novo cadastro?
                   </p>
-                  <Button size="lg" variant="default" className="rounded-2xl px-8 shadow-xl shadow-primary/20">
+                  <Button size="lg" variant="default" className="rounded-2xl px-8 shadow-xl shadow-primary/20" data-testid="button-register-patient">
                     <UserPlus className="w-5 h-5 mr-2" />
                     Cadastrar Novo Paciente
                   </Button>
@@ -240,7 +292,7 @@ export default function CheckInPage() {
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-800">{appointments?.length || 0}</p>
+              <p className="text-2xl font-bold text-slate-800" data-testid="text-total-day">{appointments?.length || 0}</p>
               <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Total do Dia</p>
             </div>
           </div>
@@ -249,7 +301,7 @@ export default function CheckInPage() {
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-800">
+              <p className="text-2xl font-bold text-slate-800" data-testid="text-waiting-count">
                 {appointments?.filter(a => a.status === 'presente').length || 0}
               </p>
               <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Na Espera</p>
@@ -260,7 +312,7 @@ export default function CheckInPage() {
               <CheckCircle2 className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-800">
+              <p className="text-2xl font-bold text-slate-800" data-testid="text-completed-count">
                 {appointments?.filter(a => a.status === 'finalizado').length || 0}
               </p>
               <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Atendidos</p>
@@ -268,6 +320,97 @@ export default function CheckInPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+        <DialogContent className="sm:max-w-[425px] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-slate-800">Check-in e Pagamento</DialogTitle>
+            <DialogDescription className="text-slate-500">
+              Registre o pagamento para confirmar a presença de <strong>{selectedAppointment?.patient.name}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-6 space-y-6">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Médico:</span>
+                <span className="font-bold text-slate-700">Dr. {selectedAppointment?.doctor.name}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Horário:</span>
+                <span className="font-bold text-slate-700">{selectedAppointment?.startTime}</span>
+              </div>
+              <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
+                <span className="font-bold text-slate-800">Valor da Consulta:</span>
+                <span className="text-lg font-black text-primary">R$ 150,00</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-sm font-bold text-slate-700 ml-1">Forma de Pagamento</label>
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  type="button" 
+                  variant={paymentMethod === 'pix' ? 'default' : 'outline'}
+                  className={cn("h-16 rounded-2xl flex flex-col gap-1 border-2", paymentMethod === 'pix' ? "border-primary" : "border-slate-100")}
+                  onClick={() => setPaymentMethod('pix')}
+                >
+                  <QrCode className="w-5 h-5" />
+                  <span className="text-xs font-bold">PIX</span>
+                </Button>
+                <Button 
+                  type="button" 
+                  variant={paymentMethod === 'cartao' ? 'default' : 'outline'}
+                  className={cn("h-16 rounded-2xl flex flex-col gap-1 border-2", paymentMethod === 'cartao' ? "border-primary" : "border-slate-100")}
+                  onClick={() => setPaymentMethod('cartao')}
+                >
+                  <CreditCard className="w-5 h-5" />
+                  <span className="text-xs font-bold">Cartão</span>
+                </Button>
+                <Button 
+                  type="button" 
+                  variant={paymentMethod === 'dinheiro' ? 'default' : 'outline'}
+                  className={cn("h-16 rounded-2xl flex flex-col gap-1 border-2", paymentMethod === 'dinheiro' ? "border-primary" : "border-slate-100")}
+                  onClick={() => setPaymentMethod('dinheiro')}
+                >
+                  <Banknote className="w-5 h-5" />
+                  <span className="text-xs font-bold">Dinheiro</span>
+                </Button>
+                <Button 
+                  type="button" 
+                  variant={paymentMethod === 'convenio' ? 'default' : 'outline'}
+                  className={cn("h-16 rounded-2xl flex flex-col gap-1 border-2", paymentMethod === 'convenio' ? "border-primary" : "border-slate-100")}
+                  onClick={() => setPaymentMethod('convenio')}
+                >
+                  <ClipboardList className="w-5 h-5" />
+                  <span className="text-xs font-bold">Convênio</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              className="rounded-xl h-11"
+              onClick={() => setIsPaymentModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              className="rounded-xl h-11 px-8 shadow-lg shadow-primary/20"
+              onClick={handleConfirmCheckin}
+              disabled={updateStatus.isPending}
+            >
+              {updateStatus.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Finalizar Check-in"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </LayoutShell>
   );
 }
