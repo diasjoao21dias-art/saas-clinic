@@ -190,6 +190,8 @@ export const api = {
         paymentMethod: z.string().optional(),
         paymentStatus: z.string().optional(),
         price: z.number().optional(),
+        type: z.string().optional(),
+        examType: z.string().optional(),
       }),
       responses: {
         200: z.custom<typeof appointments.$inferSelect>(),

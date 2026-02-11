@@ -47,6 +47,8 @@ export const appointments = pgTable("appointments", {
   startTime: text("start_time").notNull(), // HH:mm
   duration: integer("duration").default(30).notNull(), // minutes
   price: integer("price").default(15000).notNull(), // Valor em centavos (R$ 150,00)
+  type: text("type").default("consulta").notNull(), // consulta, retorno, exame
+  examType: text("exam_type"), // Ex: Sangue, Raio-X, etc.
   status: text("status").default("agendado").notNull(), // agendado, confirmado, presente, em_atendimento, finalizado, cancelado, remarcado, ausente
   paymentMethod: text("payment_method"), // dinheiro, cartao_credito, cartao_debito, pix, convenio
   paymentStatus: text("payment_status").default("pendente").notNull(), // pendente, pago

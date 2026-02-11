@@ -69,19 +69,23 @@ export function useUpdateAppointmentStatus() {
       status, 
       paymentMethod, 
       paymentStatus,
-      price
+      price,
+      type,
+      examType
     }: { 
       id: number, 
       status: string,
       paymentMethod?: string,
       paymentStatus?: string,
-      price?: number
+      price?: number,
+      type?: string,
+      examType?: string
     }) => {
       const url = buildUrl(api.appointments.updateStatus.path, { id });
       const res = await fetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, paymentMethod, paymentStatus, price }),
+        body: JSON.stringify({ status, paymentMethod, paymentStatus, price, type, examType }),
         credentials: "include",
       });
       

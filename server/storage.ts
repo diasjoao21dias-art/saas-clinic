@@ -27,7 +27,7 @@ export interface IStorage {
   getAppointment(id: number): Promise<Appointment | undefined>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment>;
-  updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string, price?: number }): Promise<Appointment>;
+  updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string, price?: number, type?: string, examType?: string }): Promise<Appointment>;
   deleteAppointment(id: number): Promise<void>;
 
   // Availability
@@ -160,12 +160,14 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string, price?: number }): Promise<Appointment> {
+  async updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string, price?: number, type?: string, examType?: string }): Promise<Appointment> {
     const updateData: any = { status };
     if (paymentDetails) {
       if (paymentDetails.method) updateData.paymentMethod = paymentDetails.method;
       if (paymentDetails.status) updateData.paymentStatus = paymentDetails.status;
       if (paymentDetails.price !== undefined) updateData.price = Math.round(paymentDetails.price * 100);
+      if (paymentDetails.type) updateData.type = paymentDetails.type;
+      if (paymentDetails.examType) updateData.examType = paymentDetails.examType;
     }
     
     const [updated] = await db.update(appointments).set(updateData).where(eq(appointments.id, id)).returning();

@@ -180,7 +180,9 @@ export default function AgendaPage() {
       status: "agendado",
       notes: "",
       clinicId: 1,
-      price: 150
+      price: 150,
+      type: "consulta",
+      examType: ""
     }
   });
 
@@ -195,7 +197,9 @@ export default function AgendaPage() {
         status: editingAppointment.status,
         notes: editingAppointment.notes || "",
         clinicId: editingAppointment.clinicId,
-        price: editingAppointment.price / 100
+        price: editingAppointment.price / 100,
+        type: (editingAppointment as any).type || "consulta",
+        examType: (editingAppointment as any).examType || ""
       });
     } else {
       aptForm.reset({
@@ -207,7 +211,9 @@ export default function AgendaPage() {
         status: "agendado",
         notes: "",
         clinicId: 1,
-        price: 150
+        price: 150,
+        type: "consulta",
+        examType: ""
       });
     }
   }, [editingAppointment]);
@@ -576,6 +582,42 @@ export default function AgendaPage() {
                   </FormItem>
                 )}
               />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={aptForm.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Agendamento</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="consulta">Consulta</SelectItem>
+                          <SelectItem value="retorno">Retorno</SelectItem>
+                          <SelectItem value="exame">Exame</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={aptForm.control}
+                  name="examType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Exame (se aplicável)</FormLabel>
+                      <FormControl><Input {...field} placeholder="Ex: Hemograma" disabled={aptForm.watch("type") !== "exame"} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={aptForm.control}

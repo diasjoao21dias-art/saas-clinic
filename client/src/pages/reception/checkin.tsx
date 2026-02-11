@@ -343,6 +343,10 @@ export default function CheckInPage() {
                 <span className="text-slate-500">Horário:</span>
                 <span className="font-bold text-slate-700">{selectedAppointment?.startTime}</span>
               </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Tipo:</span>
+                <span className="font-bold text-slate-700 capitalize">{selectedAppointment?.type} {selectedAppointment?.type === 'exame' && selectedAppointment?.examType ? `(${selectedAppointment.examType})` : ''}</span>
+              </div>
               <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
                 <span className="font-bold text-slate-800">Valor da Consulta:</span>
                 <div className="flex items-center gap-2">
