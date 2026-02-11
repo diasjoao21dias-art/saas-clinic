@@ -64,12 +64,22 @@ export function useUpdateAppointmentStatus() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, status }: { id: number, status: string }) => {
+    mutationFn: async ({ 
+      id, 
+      status, 
+      paymentMethod, 
+      paymentStatus 
+    }: { 
+      id: number, 
+      status: string,
+      paymentMethod?: string,
+      paymentStatus?: string
+    }) => {
       const url = buildUrl(api.appointments.updateStatus.path, { id });
       const res = await fetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, paymentMethod, paymentStatus }),
         credentials: "include",
       });
       
@@ -78,7 +88,6 @@ export function useUpdateAppointmentStatus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.appointments.list.path] });
-      toast({ title: "Updated", description: "Appointment status changed" });
     },
   });
 }
