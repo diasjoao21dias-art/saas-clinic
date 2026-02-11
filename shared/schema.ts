@@ -18,11 +18,16 @@ export const inventory = pgTable("inventory", {
   id: serial("id").primaryKey(),
   clinicId: integer("clinic_id").references(() => clinics.id).notNull(),
   name: text("name").notNull(),
-  category: text("category").notNull(), // 'material', 'medicamento'
-  unit: text("unit").notNull(), // 'unidade', 'ml', 'mg', 'caixa'
+  category: text("category").notNull(), // 'material', 'medicamento', 'equipamento', 'outro'
+  unit: text("unit").notNull(), // 'unidade', 'ml', 'mg', 'caixa', 'frasco', 'pacote'
   quantity: integer("quantity").default(0).notNull(),
   minQuantity: integer("min_quantity").default(5).notNull(),
   pricePerUnit: integer("price_per_unit").default(0).notNull(),
+  supplier: text("supplier"),
+  location: text("location"),
+  batchNumber: text("batch_number"),
+  expiryDate: date("expiry_date"),
+  description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

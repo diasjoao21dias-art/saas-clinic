@@ -250,6 +250,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Inventory
+  async deleteInventoryItem(id: number): Promise<void> {
+    await db.delete(inventory).where(eq(inventory.id, id));
+  }
+
   async getInventory(clinicId: number): Promise<Inventory[]> {
     return await db.select().from(inventory).where(eq(inventory.clinicId, clinicId));
   }
