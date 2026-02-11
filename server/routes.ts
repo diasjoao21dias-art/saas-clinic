@@ -367,6 +367,50 @@ export async function registerRoutes(
     res.json(updated);
   });
 
+  // Inventory
+  app.get("/api/inventory", requireAuth, async (req, res) => {
+    const clinicId = (req.user as any).clinicId;
+    const items = await storage.getInventory(clinicId);
+    res.json(items);
+  });
+
+  app.post("/api/inventory", requireAuth, async (req, res) => {
+    const clinicId = (req.user as any).clinicId;
+    const item = await storage.createInventoryItem({ ...req.body, clinicId });
+    res.status(201).json(item);
+  });
+
+  app.post("/api/inventory/transaction", requireAuth, async (req, res) => {
+    const tx = await storage.createInventoryTransaction(req.body);
+    res.status(201).json(tx);
+  });
+
+  // TISS
+  app.get("/api/tiss", requireAuth, async (req, res) => {
+    const clinicId = (req.user as any).clinicId;
+    const bills = await storage.getTissBills(clinicId);
+    res.json(bills);
+  });
+
+  app.post("/api/tiss", requireAuth, async (req, res) => {
+    const clinicId = (req.user as any).clinicId;
+    const bill = await storage.createTissBill({ ...req.body, clinicId });
+    res.status(201).json(bill);
+  });
+
+  // Digital Signature
+  app.post("/api/medical-records/:id/sign", requireAuth, async (req, res) => {
+    const doctorId = (req.user as any).id;
+    const recordId = Number(req.params.id);
+    const signature = await storage.createDigitalSignature({
+      medicalRecordId: recordId,
+      doctorId,
+      signatureHash: req.body.hash,
+      certificateInfo: req.body.certificate,
+    });
+    res.status(201).json(signature);
+  });
+
   // Clinics
   app.get(api.clinics.list.path, requireAuth, async (req, res) => {
     const clinics = await storage.getClinics();
@@ -477,6 +521,27 @@ async function seedDatabase() {
       duration: 30,
       status: "agendado",
       notes: "Consulta de rotina"
+    });
+
+    // Seed Inventory
+    await storage.createInventoryItem({
+      clinicId: clinic.id,
+      name: "Seringa 5ml",
+      category: "material",
+      unit: "unidade",
+      quantity: 50,
+      minQuantity: 10,
+      pricePerUnit: 50,
+    });
+
+    await storage.createInventoryItem({
+      clinicId: clinic.id,
+      name: "Dipirona 500mg",
+      category: "medicamento",
+      unit: "caixa",
+      quantity: 5,
+      minQuantity: 8,
+      pricePerUnit: 1200,
     });
 
     console.log("Semeio concluído!");

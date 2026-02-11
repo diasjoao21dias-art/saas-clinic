@@ -17,6 +17,8 @@ import DoctorAppointmentsPage from "@/pages/doctor/appointments";
 import AttendPage from "@/pages/doctor/attend";
 import PrescriptionsPage from "@/pages/doctor/prescriptions";
 import CalculatorsPage from "@/pages/doctor/calculators";
+import InventoryPage from "@/pages/admin/inventory";
+import BillingPage from "@/pages/admin/billing";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ 
@@ -87,6 +89,12 @@ function Router() {
       </Route>
       <Route path="/admin/clinics">
         <ProtectedRoute component={ClinicsManagement} allowedRoles={['admin']} />
+      </Route>
+      <Route path="/admin/inventory">
+        <ProtectedRoute component={InventoryPage} allowedRoles={['admin', 'operator']} />
+      </Route>
+      <Route path="/admin/billing">
+        <ProtectedRoute component={BillingPage} allowedRoles={['admin', 'operator']} />
       </Route>
 
       <Route path="/">

@@ -1,0 +1,118 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { FileText, Download, Send, CheckCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+export default function BillingPage() {
+  const { toast } = useToast();
+  const { data: bills, isLoading } = useQuery<any[]>({ queryKey: ["/api/tiss"] });
+
+  const generateXmlMutation = useMutation({
+    mutationFn: async (billId: number) => {
+      // Simulação de geração de XML TISS
+      await apiRequest("POST", `/api/tiss/${billId}/generate`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tiss"] });
+      toast({ title: "Sucesso", description: "Guia TISS gerada com sucesso." });
+    },
+  });
+
+  if (isLoading) return <div>Carregando...</div>;
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">Faturamento TISS/TUSS</h1>
+        <Button data-testid="button-sync-convenios">
+          Sincronizar Convênios
+        </Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Guias Pendentes</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{bills?.filter(b => b.status === 'pendente').length || 0}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Lotes Enviados</CardTitle>
+            <Send className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{bills?.filter(b => b.status === 'enviada').length || 0}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Recebido</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">R$ 0,00</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Guias Médicas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Paciente</TableHead>
+                <TableHead>Convênio</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bills?.map((bill) => (
+                <TableRow key={bill.id}>
+                  <TableCell className="font-medium">Paciente #{bill.patientId}</TableCell>
+                  <TableCell>{bill.insuranceId}</TableCell>
+                  <TableCell>{new Date(bill.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <Badge variant={bill.status === 'pendente' ? 'outline' : 'default'}>
+                      {bill.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button size="icon" variant="ghost" title="Gerar XML TISS">
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" title="Enviar para Convênio">
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!bills || bills.length === 0) && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                    Nenhuma guia encontrada para o período.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

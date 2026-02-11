@@ -1,9 +1,14 @@
-import { db } from "./db";
+import { 
+  db 
+} from "./db";
 import { 
   users, patients, appointments, medicalRecords, clinics, availabilityExceptions,
+  inventory, inventoryTransactions, tissBills, digitalSignatures,
   type User, type InsertUser, type Patient, type InsertPatient,
   type Appointment, type InsertAppointment, type MedicalRecord, type InsertMedicalRecord,
-  type Clinic, type InsertClinic, type AvailabilityException, type InsertAvailabilityException
+  type Clinic, type InsertClinic, type AvailabilityException, type InsertAvailabilityException,
+  type Inventory, type InsertInventory, type InventoryTransaction, type InsertInventoryTransaction,
+  type TissBill, type InsertTissBill, type DigitalSignature, type InsertDigitalSignature
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
@@ -23,7 +28,7 @@ export interface IStorage {
   updatePatient(id: number, patient: Partial<InsertPatient>): Promise<Patient>;
 
   // Appointments
-  getAppointments(clinicId: number, filters?: { date?: string; doctorId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]>;
+  getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]>;
   getAppointment(id: number): Promise<Appointment | undefined>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment>;
@@ -42,6 +47,20 @@ export interface IStorage {
   createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord>;
   updateMedicalRecord(id: number, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord>;
   
+  // Inventory
+  getInventory(clinicId: number): Promise<Inventory[]>;
+  createInventoryItem(item: InsertInventory): Promise<Inventory>;
+  updateInventoryItem(id: number, item: Partial<Inventory>): Promise<Inventory>;
+  createInventoryTransaction(transaction: InsertInventoryTransaction): Promise<InventoryTransaction>;
+
+  // TISS
+  getTissBills(clinicId: number): Promise<TissBill[]>;
+  createTissBill(bill: InsertTissBill): Promise<TissBill>;
+
+  // Digital Signature
+  createDigitalSignature(signature: InsertDigitalSignature): Promise<DigitalSignature>;
+  getSignaturesByRecord(recordId: number): Promise<DigitalSignature[]>;
+
   // Clinics
   getClinics(): Promise<Clinic[]>;
   getClinic(id: number): Promise<Clinic | undefined>;
@@ -193,7 +212,6 @@ export class DatabaseStorage implements IStorage {
 
   async checkAvailability(clinicId: number, doctorId: number, date: string): Promise<boolean> {
     const exceptions = await this.getAvailabilityExceptions(clinicId, doctorId, date);
-    // If there's an exception, isAvailable determines it. Default is true if no exception.
     if (exceptions.length > 0) {
       return exceptions[0].isAvailable;
     }
@@ -227,9 +245,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMedicalRecord(id: number, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
-    // @ts-ignore - vitals type mismatch in drizzle-zod vs drizzle-orm
     const [updated] = await db.update(medicalRecords).set(record as any).where(eq(medicalRecords.id, id)).returning();
     return updated;
+  }
+
+  // Inventory
+  async getInventory(clinicId: number): Promise<Inventory[]> {
+    return await db.select().from(inventory).where(eq(inventory.clinicId, clinicId));
+  }
+
+  async createInventoryItem(item: InsertInventory): Promise<Inventory> {
+    const [newItem] = await db.insert(inventory).values(item).returning();
+    return newItem;
+  }
+
+  async updateInventoryItem(id: number, item: Partial<Inventory>): Promise<Inventory> {
+    const [updated] = await db.update(inventory).set(item).where(eq(inventory.id, id)).returning();
+    return updated;
+  }
+
+  async createInventoryTransaction(transaction: InsertInventoryTransaction): Promise<InventoryTransaction> {
+    const [newTx] = await db.insert(inventoryTransactions).values(transaction).returning();
+    // Update quantity
+    const [item] = await db.select().from(inventory).where(eq(inventory.id, transaction.inventoryId));
+    if (item) {
+      const newQty = transaction.type === 'entrada' ? item.quantity + transaction.quantity : item.quantity - transaction.quantity;
+      await db.update(inventory).set({ quantity: newQty }).where(eq(inventory.id, item.id));
+    }
+    return newTx;
+  }
+
+  // TISS
+  async getTissBills(clinicId: number): Promise<TissBill[]> {
+    return await db.select().from(tissBills).where(eq(tissBills.clinicId, clinicId));
+  }
+
+  async createTissBill(bill: InsertTissBill): Promise<TissBill> {
+    const [newBill] = await db.insert(tissBills).values(bill).returning();
+    return newBill;
+  }
+
+  // Digital Signature
+  async createDigitalSignature(signature: InsertDigitalSignature): Promise<DigitalSignature> {
+    const [newSig] = await db.insert(digitalSignatures).values(signature).returning();
+    return newSig;
+  }
+
+  async getSignaturesByRecord(recordId: number): Promise<DigitalSignature[]> {
+    return await db.select().from(digitalSignatures).where(eq(digitalSignatures.medicalRecordId, recordId));
   }
 
   async getClinic(id: number): Promise<Clinic | undefined> {
