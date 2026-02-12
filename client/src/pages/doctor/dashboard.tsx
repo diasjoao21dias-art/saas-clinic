@@ -35,7 +35,7 @@ export default function DoctorDashboard() {
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold text-slate-900">Olá, Dr. {user?.name.split(' ')[0]}</h1>
+            <h1 className="text-3xl font-display font-bold text-slate-900">Olá, {user?.name}</h1>
             <p className="text-muted-foreground mt-1">
               {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
             </p>
