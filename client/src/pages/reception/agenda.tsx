@@ -1,3 +1,4 @@
+import { useAuth } from "@/hooks/use-auth";
 import LayoutShell from "@/components/layout-shell";
 import { Calendar, Users, Clock, AlertCircle, Plus, Trash2, Edit2, Loader2 } from "lucide-react";
 import { useAppointments } from "@/hooks/use-appointments";
