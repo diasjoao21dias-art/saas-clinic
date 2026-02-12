@@ -69,7 +69,7 @@ function Router() {
                 </div>
               </header>
             )}
-            <main className="flex-1 overflow-y-auto bg-slate-50/30">
+            <main className="flex-1 overflow-y-auto bg-slate-50/30 p-4 md:p-6 lg:p-8">
               <Switch>
                 <Route path="/login" component={LoginPage} />
                 
