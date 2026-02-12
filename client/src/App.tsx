@@ -2,6 +2,7 @@ import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
@@ -20,6 +21,11 @@ import CalculatorsPage from "@/pages/doctor/calculators";
 import InventoryPage from "@/pages/admin/inventory";
 import BillingPage from "@/pages/admin/billing";
 import NotFound from "@/pages/not-found";
+
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
+import NurseDashboard from "@/pages/nurse/dashboard";
+import NurseTriagePage from "@/pages/nurse/triage";
 
 function ProtectedRoute({ 
   component: Component, 
@@ -44,76 +50,96 @@ function ProtectedRoute({
   return <Component />;
 }
 
-import NurseDashboard from "@/pages/nurse/dashboard";
-import NurseTriagePage from "@/pages/nurse/triage";
-
 function Router() {
+  const { user } = useAuth();
+
   return (
-    <Switch>
-      <Route path="/login" component={LoginPage} />
-      
-      {/* Reception Routes */}
-      <Route path="/reception/dashboard">
-        <ProtectedRoute component={ReceptionDashboard} allowedRoles={['operator', 'admin']} />
-      </Route>
-      <Route path="/reception/schedule">
-        <ProtectedRoute component={AgendaPage} allowedRoles={['operator', 'admin', 'nurse']} />
-      </Route>
-      <Route path="/reception/patients">
-        <ProtectedRoute component={PatientDirectory} allowedRoles={['operator', 'admin', 'doctor', 'nurse']} />
-      </Route>
-      <Route path="/reception/checkin">
-        <ProtectedRoute component={CheckInPage} allowedRoles={['operator', 'admin']} />
-      </Route>
+    <SidebarProvider>
+      <TooltipProvider>
+        <div className="flex h-screen w-full">
+          {user && <AppSidebar />}
+          <div className="flex flex-col flex-1 overflow-hidden">
+            {user && (
+              <header className="flex h-16 items-center justify-between px-4 border-b shrink-0 bg-white">
+                <SidebarTrigger data-testid="button-sidebar-toggle" />
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-muted-foreground hidden md:inline-block">
+                    {user.clinicId ? "Unidade Principal" : ""}
+                  </span>
+                </div>
+              </header>
+            )}
+            <main className="flex-1 overflow-y-auto bg-slate-50/30">
+              <Switch>
+                <Route path="/login" component={LoginPage} />
+                
+                {/* Reception Routes */}
+                <Route path="/reception/dashboard">
+                  <ProtectedRoute component={ReceptionDashboard} allowedRoles={['operator', 'admin']} />
+                </Route>
+                <Route path="/reception/schedule">
+                  <ProtectedRoute component={AgendaPage} allowedRoles={['operator', 'admin', 'nurse']} />
+                </Route>
+                <Route path="/reception/patients">
+                  <ProtectedRoute component={PatientDirectory} allowedRoles={['operator', 'admin', 'doctor', 'nurse']} />
+                </Route>
+                <Route path="/reception/checkin">
+                  <ProtectedRoute component={CheckInPage} allowedRoles={['operator', 'admin']} />
+                </Route>
 
-      {/* Nurse Routes */}
-      <Route path="/nurse/dashboard">
-        <ProtectedRoute component={NurseDashboard} allowedRoles={['nurse', 'admin']} />
-      </Route>
-      <Route path="/nurse/triage/:id">
-        <ProtectedRoute component={NurseTriagePage} allowedRoles={['nurse', 'admin']} />
-      </Route>
+                {/* Nurse Routes */}
+                <Route path="/nurse/dashboard">
+                  <ProtectedRoute component={NurseDashboard} allowedRoles={['nurse', 'admin']} />
+                </Route>
+                <Route path="/nurse/triage/:id">
+                  <ProtectedRoute component={NurseTriagePage} allowedRoles={['nurse', 'admin']} />
+                </Route>
 
-      {/* Doctor Routes */}
-      <Route path="/doctor/dashboard">
-        <ProtectedRoute component={DoctorDashboard} allowedRoles={['doctor', 'admin']} />
-      </Route>
-      <Route path="/doctor/appointments">
-        <ProtectedRoute component={DoctorAppointmentsPage} allowedRoles={['doctor', 'admin']} />
-      </Route>
-      <Route path="/doctor/attend/:id">
-        <ProtectedRoute component={AttendPage} allowedRoles={['doctor', 'admin']} />
-      </Route>
-      <Route path="/doctor/prescriptions">
-        <ProtectedRoute component={PrescriptionsPage} allowedRoles={['doctor', 'admin']} />
-      </Route>
-      <Route path="/doctor/calculators">
-        <ProtectedRoute component={CalculatorsPage} allowedRoles={['doctor', 'admin']} />
-      </Route>
+                {/* Doctor Routes */}
+                <Route path="/doctor/dashboard">
+                  <ProtectedRoute component={DoctorDashboard} allowedRoles={['doctor', 'admin']} />
+                </Route>
+                <Route path="/doctor/appointments">
+                  <ProtectedRoute component={DoctorAppointmentsPage} allowedRoles={['doctor', 'admin']} />
+                </Route>
+                <Route path="/doctor/attend/:id">
+                  <ProtectedRoute component={AttendPage} allowedRoles={['doctor', 'admin']} />
+                </Route>
+                <Route path="/doctor/prescriptions">
+                  <ProtectedRoute component={PrescriptionsPage} allowedRoles={['doctor', 'admin']} />
+                </Route>
+                <Route path="/doctor/calculators">
+                  <ProtectedRoute component={CalculatorsPage} allowedRoles={['doctor', 'admin']} />
+                </Route>
 
-      {/* Admin Routes */}
-      <Route path="/admin/dashboard">
-        <ProtectedRoute component={ReceptionDashboard} allowedRoles={['admin']} />
-      </Route>
-      <Route path="/admin/users">
-        <ProtectedRoute component={TeamManagement} allowedRoles={['admin']} />
-      </Route>
-      <Route path="/admin/clinics">
-        <ProtectedRoute component={ClinicsManagement} allowedRoles={['admin']} />
-      </Route>
-      <Route path="/admin/inventory">
-        <ProtectedRoute component={InventoryPage} allowedRoles={['admin', 'operator']} />
-      </Route>
-      <Route path="/admin/billing">
-        <ProtectedRoute component={BillingPage} allowedRoles={['admin', 'operator']} />
-      </Route>
+                {/* Admin Routes */}
+                <Route path="/admin/dashboard">
+                  <ProtectedRoute component={ReceptionDashboard} allowedRoles={['admin']} />
+                </Route>
+                <Route path="/admin/users">
+                  <ProtectedRoute component={TeamManagement} allowedRoles={['admin']} />
+                </Route>
+                <Route path="/admin/clinics">
+                  <ProtectedRoute component={ClinicsManagement} allowedRoles={['admin']} />
+                </Route>
+                <Route path="/admin/inventory">
+                  <ProtectedRoute component={InventoryPage} allowedRoles={['admin', 'operator']} />
+                </Route>
+                <Route path="/admin/billing">
+                  <ProtectedRoute component={BillingPage} allowedRoles={['admin', 'operator']} />
+                </Route>
 
-      <Route path="/">
-        <Redirect to="/login" />
-      </Route>
-      
-      <Route component={NotFound} />
-    </Switch>
+                <Route path="/">
+                  <Redirect to="/login" />
+                </Route>
+                
+                <Route component={NotFound} />
+              </Switch>
+            </main>
+          </div>
+        </div>
+      </TooltipProvider>
+    </SidebarProvider>
   );
 }
 
