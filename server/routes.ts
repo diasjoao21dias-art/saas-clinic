@@ -522,6 +522,17 @@ async function seedDatabase() {
       cpf: "123.456.789-00"
     });
 
+    const patient2 = await storage.createPatient({
+      name: "Maria Oliveira",
+      birthDate: "1992-08-20",
+      phone: "(11) 97777-6666",
+      email: "maria@exemplo.com",
+      gender: "Feminino",
+      address: "Av. Brasil, 456",
+      clinicId: clinic.id,
+      cpf: "987.654.321-99"
+    });
+
     // Create Appointments
     await storage.createAppointment({
       patientId: patient1.id,
@@ -530,8 +541,19 @@ async function seedDatabase() {
       date: new Date().toISOString().split('T')[0], // Today
       startTime: "09:00",
       duration: 30,
-      status: "agendado",
-      notes: "Consulta de rotina"
+      status: "presente",
+      notes: "Consulta de rotina - Hipertensão"
+    });
+
+    await storage.createAppointment({
+      patientId: patient2.id,
+      doctorId: doctor.id,
+      clinicId: clinic.id,
+      date: new Date().toISOString().split('T')[0], // Today
+      startTime: "10:30",
+      duration: 30,
+      status: "presente",
+      notes: "Avaliação pré-operatória"
     });
 
     // Seed Inventory
