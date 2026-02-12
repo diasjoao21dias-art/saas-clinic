@@ -284,13 +284,20 @@ export default function AgendaPage() {
     return matchesDoctor && matchesStatus;
   });
 
+  const { user } = useAuth();
+  const isReadOnly = user?.role === 'nurse';
+
   return (
     <LayoutShell>
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-display font-bold text-slate-900">Agenda Completa</h1>
-            <p className="text-muted-foreground mt-2">Visualize e gerencie todos os agendamentos da clínica</p>
+            <p className="text-muted-foreground mt-2">
+              {isReadOnly 
+                ? "Visualize os agendamentos da clínica" 
+                : "Visualize e gerencie todos os agendamentos da clínica"}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <Select 
@@ -324,16 +331,20 @@ export default function AgendaPage() {
                 <SelectItem value="finalizado">Finalizado</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={() => { setEditingAppointment(null); setIsAptDialogOpen(true); }} className="gap-2">
-              <Plus className="w-4 h-4" /> Agendar Consulta
-            </Button>
-            {selectedDoctorId && (
-              <Button 
-                variant="outline" 
-                onClick={() => setIsAvailabilityDialogOpen(true)}
-              >
-                Bloquear/Desbloquear Agenda
-              </Button>
+            {!isReadOnly && (
+              <>
+                <Button onClick={() => { setEditingAppointment(null); setIsAptDialogOpen(true); }} className="gap-2">
+                  <Plus className="w-4 h-4" /> Agendar Consulta
+                </Button>
+                {selectedDoctorId && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsAvailabilityDialogOpen(true)}
+                  >
+                    Bloquear/Desbloquear Agenda
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -464,6 +475,7 @@ export default function AgendaPage() {
                   });
                 }}
                 eventClick={(info) => {
+                  if (isReadOnly) return;
                   const apt = info.event.extendedProps.appointment;
                   if (apt.status === 'confirmado') {
                     setSelectedAppointmentForCheckin(apt);
@@ -474,6 +486,7 @@ export default function AgendaPage() {
                   }
                 }}
                 dateClick={(info) => {
+                  if (isReadOnly) return;
                   const dateStr = info.dateStr.split('T')[0];
                   const isBlocked = availabilityExceptions?.some(ex => 
                     ex.date === dateStr && 

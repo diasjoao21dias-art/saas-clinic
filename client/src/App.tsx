@@ -57,7 +57,7 @@ function Router() {
         <ProtectedRoute component={ReceptionDashboard} allowedRoles={['operator', 'admin']} />
       </Route>
       <Route path="/reception/schedule">
-        <ProtectedRoute component={AgendaPage} allowedRoles={['operator', 'admin']} />
+        <ProtectedRoute component={AgendaPage} allowedRoles={['operator', 'admin', 'nurse']} />
       </Route>
       <Route path="/reception/patients">
         <ProtectedRoute component={PatientDirectory} allowedRoles={['operator', 'admin', 'doctor', 'nurse']} />
