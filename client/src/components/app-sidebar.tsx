@@ -59,8 +59,13 @@ export function AppSidebar() {
     { title: "Faturamento", url: "/admin/billing", icon: CreditCard },
   ]
 
+  const nurseItems = [
+    { title: "Dashboard", url: "/nurse/dashboard", icon: Activity },
+  ]
+
   const menuItems = user?.role === 'doctor' ? doctorItems : 
                     user?.role === 'operator' ? receptionItems :
+                    user?.role === 'nurse' ? nurseItems :
                     [...receptionItems, ...adminItems]
 
   return (
