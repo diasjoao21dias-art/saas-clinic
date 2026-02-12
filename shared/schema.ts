@@ -103,6 +103,26 @@ export const appointments = pgTable("appointments", {
   insurance: text("insurance"),
   isPrivate: boolean("is_private").default(false).notNull(),
   notes: text("notes"),
+  triageDone: boolean("triage_done").default(false).notNull(),
+  triageData: jsonb("triage_data").$type<{
+    weight?: string;
+    height?: string;
+    bloodPressure?: string;
+    temperature?: string;
+    heartRate?: string;
+    respiratoryRate?: string;
+    oxygenSaturation?: string;
+    notes?: string;
+  }>(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const medicalRecordLogs = pgTable("medical_record_logs", {
+  id: serial("id").primaryKey(),
+  medicalRecordId: integer("medical_record_id").references(() => medicalRecords.id).notNull(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  action: text("action").notNull(), // 'create', 'update', 'delete', 'sign'
+  changes: jsonb("changes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -218,7 +238,10 @@ export type Clinic = typeof clinics.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Patient = typeof patients.$inferSelect;
 export type Appointment = typeof appointments.$inferSelect;
-export type MedicalRecord = typeof medicalRecords.$inferSelect;
+export const insertMedicalRecordLogSchema = createInsertSchema(medicalRecordLogs).omit({ id: true, createdAt: true });
+
+export type MedicalRecordLog = typeof medicalRecordLogs.$inferSelect;
+export type InsertMedicalRecordLog = z.infer<typeof insertMedicalRecordLogSchema>;
 export type Inventory = typeof inventory.$inferSelect;
 export type InventoryTransaction = typeof inventoryTransactions.$inferSelect;
 export type TissBill = typeof tissBills.$inferSelect;

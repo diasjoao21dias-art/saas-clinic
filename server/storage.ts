@@ -61,12 +61,12 @@ export interface IStorage {
   createDigitalSignature(signature: InsertDigitalSignature): Promise<DigitalSignature>;
   getSignaturesByRecord(recordId: number): Promise<DigitalSignature[]>;
 
-  // Clinics
-  getClinics(): Promise<Clinic[]>;
-  getClinic(id: number): Promise<Clinic | undefined>;
-  createClinic(clinic: InsertClinic): Promise<Clinic>;
-  updateClinic(id: number, clinic: Partial<InsertClinic>): Promise<Clinic>;
-  deleteClinic(id: number): Promise<void>;
+  // Triage
+  updateTriage(appointmentId: number, triageData: any): Promise<Appointment>;
+
+  // Audit Logs
+  createMedicalRecordLog(log: InsertMedicalRecordLog): Promise<MedicalRecordLog>;
+  getMedicalRecordLogs(medicalRecordId: number): Promise<MedicalRecordLog[]>;
 }
 
 export class DatabaseStorage implements IStorage {
