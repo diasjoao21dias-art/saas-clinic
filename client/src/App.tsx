@@ -44,6 +44,9 @@ function ProtectedRoute({
   return <Component />;
 }
 
+import NurseDashboard from "@/pages/nurse/dashboard";
+import NurseTriagePage from "@/pages/nurse/triage";
+
 function Router() {
   return (
     <Switch>
@@ -57,10 +60,18 @@ function Router() {
         <ProtectedRoute component={AgendaPage} allowedRoles={['operator', 'admin']} />
       </Route>
       <Route path="/reception/patients">
-        <ProtectedRoute component={PatientDirectory} allowedRoles={['operator', 'admin', 'doctor']} />
+        <ProtectedRoute component={PatientDirectory} allowedRoles={['operator', 'admin', 'doctor', 'nurse']} />
       </Route>
       <Route path="/reception/checkin">
         <ProtectedRoute component={CheckInPage} allowedRoles={['operator', 'admin']} />
+      </Route>
+
+      {/* Nurse Routes */}
+      <Route path="/nurse/dashboard">
+        <ProtectedRoute component={NurseDashboard} allowedRoles={['nurse', 'admin']} />
+      </Route>
+      <Route path="/nurse/triage/:id">
+        <ProtectedRoute component={NurseTriagePage} allowedRoles={['nurse', 'admin']} />
       </Route>
 
       {/* Doctor Routes */}

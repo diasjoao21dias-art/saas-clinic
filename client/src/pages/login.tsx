@@ -31,6 +31,7 @@ export default function LoginPage() {
     if (user) {
       if (user.role === 'admin') setLocation('/admin/dashboard');
       else if (user.role === 'doctor') setLocation('/doctor/dashboard');
+      else if (user.role === 'nurse') setLocation('/nurse/dashboard');
       else setLocation('/reception/dashboard');
     }
   }, [user, setLocation]);
@@ -129,11 +130,12 @@ export default function LoginPage() {
           </Card>
 
           <div className="text-center space-y-4">
-            <p className="text-sm text-slate-400 uppercase tracking-wider font-medium text-xs">Contas de Demonstração</p>
-            <div className="flex gap-3 justify-center">
-              <Button variant="outline" size="sm" onClick={() => fillCredentials('admin')}>Admin</Button>
-              <Button variant="outline" size="sm" onClick={() => fillCredentials('doctor')}>Médico</Button>
-              <Button variant="outline" size="sm" onClick={() => fillCredentials('operator')}>Recepção</Button>
+            <p className="text-sm text-slate-400 uppercase tracking-wider font-medium text-[10px]">Contas de Demonstração</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => fillCredentials('admin')}>Admin</Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => fillCredentials('doctor')}>Médico</Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => fillCredentials('operator')}>Recepção</Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => fillCredentials('nurse')}>Enfermagem</Button>
             </div>
           </div>
         </div>

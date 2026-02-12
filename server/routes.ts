@@ -555,6 +555,14 @@ async function seedDatabase() {
       pricePerUnit: 1200,
     });
 
+    await storage.createUser({
+      username: "nurse",
+      password: "password123",
+      name: "Enf. Clara Santos",
+      role: "nurse",
+      clinicId: clinic.id
+    });
+
     console.log("Semeio concluído!");
   }
 }

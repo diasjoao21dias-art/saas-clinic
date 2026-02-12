@@ -66,7 +66,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
-  role: text("role").notNull(), // 'admin', 'operator', 'doctor'
+  role: text("role").notNull(), // 'admin', 'operator', 'doctor', 'nurse'
   specialty: text("specialty"), // For doctors
   clinicId: integer("clinic_id").references(() => clinics.id),
   createdAt: timestamp("created_at").defaultNow(),
