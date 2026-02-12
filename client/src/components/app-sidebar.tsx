@@ -62,6 +62,7 @@ export function AppSidebar() {
   const nurseItems = [
     { title: "Dashboard", url: "/nurse/dashboard", icon: Activity },
     { title: "Agenda", url: "/reception/schedule", icon: Calendar },
+    { title: "Pacientes", url: "/reception/patients", icon: UserPlus },
   ]
 
   const menuItems = user?.role === 'doctor' ? doctorItems : 
