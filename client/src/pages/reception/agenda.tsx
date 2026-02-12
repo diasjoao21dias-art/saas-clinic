@@ -248,24 +248,35 @@ export default function AgendaPage() {
     }
   };
 
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
   const calendarEvents = allAppointments?.map(apt => {
     const startStr = `${apt.date}T${apt.startTime}`;
     const startDate = parseISO(startStr);
     const endDate = addMinutes(startDate, apt.duration);
+    
+    let bgColor = '#3b82f6'; // default blue
+    if (apt.status === 'finalizado') bgColor = '#10b981'; // green
+    if (apt.status === 'presente') bgColor = '#f59e0b'; // orange
+    if (apt.status === 'cancelado') bgColor = '#ef4444'; // red
+    if (apt.status === 'em_atendimento') bgColor = '#8b5cf6'; // purple
     
     return {
       id: apt.id.toString(),
       title: `${apt.patient.name} (Dr. ${apt.doctor.name})`,
       start: startStr,
       end: format(endDate, "yyyy-MM-dd'T'HH:mm:ss"),
-      backgroundColor: apt.status === 'completed' ? '#10b981' : '#3b82f6',
+      backgroundColor: bgColor,
       extendedProps: { appointment: apt }
     };
   }) || [];
 
-  const filteredEvents = selectedDoctorId 
-    ? calendarEvents.filter(e => e.extendedProps.appointment.doctorId === selectedDoctorId)
-    : calendarEvents;
+  const filteredEvents = calendarEvents.filter(e => {
+    const apt = e.extendedProps.appointment;
+    const matchesDoctor = !selectedDoctorId || apt.doctorId === selectedDoctorId;
+    const matchesStatus = statusFilter === "all" || apt.status === statusFilter;
+    return matchesDoctor && matchesStatus;
+  });
 
   return (
     <LayoutShell>
@@ -280,14 +291,31 @@ export default function AgendaPage() {
               onValueChange={(v) => setSelectedDoctorId(v === "all" ? undefined : Number(v))} 
               value={selectedDoctorId?.toString() || "all"}
             >
-              <SelectTrigger className="w-[200px] bg-white">
-                <SelectValue placeholder="Todos os Médicos" />
+              <SelectTrigger className="w-[180px] bg-white">
+                <SelectValue placeholder="Médico" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos os Médicos</SelectItem>
+                <SelectItem value="all">Todos Médicos</SelectItem>
                 {doctors?.map(d => (
                   <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+
+            <Select 
+              onValueChange={setStatusFilter} 
+              value={statusFilter}
+            >
+              <SelectTrigger className="w-[180px] bg-white">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos Status</SelectItem>
+                <SelectItem value="agendado">Agendado</SelectItem>
+                <SelectItem value="confirmado">Confirmado</SelectItem>
+                <SelectItem value="presente">Aguardando</SelectItem>
+                <SelectItem value="em_atendimento">Em Atendimento</SelectItem>
+                <SelectItem value="finalizado">Finalizado</SelectItem>
               </SelectContent>
             </Select>
             <Button onClick={() => { setEditingAppointment(null); setIsAptDialogOpen(true); }} className="gap-2">

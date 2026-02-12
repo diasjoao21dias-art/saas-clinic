@@ -3,12 +3,13 @@ import {
 } from "./db";
 import { 
   users, patients, appointments, medicalRecords, clinics, availabilityExceptions,
-  inventory, inventoryTransactions, tissBills, digitalSignatures,
+  inventory, inventoryTransactions, tissBills, digitalSignatures, medicalRecordLogs,
   type User, type InsertUser, type Patient, type InsertPatient,
   type Appointment, type InsertAppointment, type MedicalRecord, type InsertMedicalRecord,
   type Clinic, type InsertClinic, type AvailabilityException, type InsertAvailabilityException,
   type Inventory, type InsertInventory, type InventoryTransaction, type InsertInventoryTransaction,
-  type TissBill, type InsertTissBill, type DigitalSignature, type InsertDigitalSignature
+  type TissBill, type InsertTissBill, type DigitalSignature, type InsertDigitalSignature,
+  type MedicalRecordLog, type InsertMedicalRecordLog
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
@@ -171,12 +172,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
-    const [newAppointment] = await db.insert(appointments).values(appointment).returning();
+    const [newAppointment] = await db.insert(appointments).values([appointment]).returning();
     return newAppointment;
   }
 
   async updateAppointment(id: number, appointment: Partial<InsertAppointment>): Promise<Appointment> {
-    const [updated] = await db.update(appointments).set(appointment).where(eq(appointments.id, id)).returning();
+    const [updated] = await db.update(appointments).set(appointment as any).where(eq(appointments.id, id)).returning();
     return updated;
   }
 
@@ -316,6 +317,11 @@ export class DatabaseStorage implements IStorage {
 
   async getSignaturesByRecord(recordId: number): Promise<DigitalSignature[]> {
     return await db.select().from(digitalSignatures).where(eq(digitalSignatures.medicalRecordId, recordId));
+  }
+
+  async getClinic(id: number): Promise<Clinic | undefined> {
+    const [clinic] = await db.select().from(clinics).where(eq(clinics.id, id));
+    return clinic;
   }
 
   async createMedicalRecordLog(log: InsertMedicalRecordLog): Promise<MedicalRecordLog> {

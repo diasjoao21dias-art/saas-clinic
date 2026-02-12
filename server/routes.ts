@@ -240,7 +240,13 @@ export async function registerRoutes(
   });
 
   app.patch(api.appointments.updateStatus.path, requireAuth, async (req, res) => {
-    const { status, paymentMethod, paymentStatus, price } = req.body;
+    const { status, paymentMethod, paymentStatus, price, triageData } = req.body;
+    
+    if (status === 'presente' && triageData) {
+      const updated = await storage.updateTriage(Number(req.params.id), triageData);
+      return res.json(updated);
+    }
+
     const updated = await storage.updateAppointmentStatus(
       Number(req.params.id), 
       status, 

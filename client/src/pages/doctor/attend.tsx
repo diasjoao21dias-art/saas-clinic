@@ -257,7 +257,18 @@ export default function AttendPage() {
                   <Separator />
 
                   <div>
-                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Sinais Vitais</h4>
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Triagem e Sinais Vitais</h4>
+                    {appointment.triageDone && (
+                      <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-100 text-xs text-emerald-800">
+                        <p className="font-bold mb-1">Dados da Triagem:</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <p>PA: {appointment.triageData?.bloodPressure || '-'}</p>
+                          <p>Temp: {appointment.triageData?.temperature || '-'}</p>
+                          <p>Peso: {appointment.triageData?.weight || '-'}</p>
+                          <p>SatO2: {appointment.triageData?.oxygenSaturation || '-'}</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
                         <p className="text-xs text-blue-600 mb-1">Pressão Arterial</p>
