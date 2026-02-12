@@ -7,7 +7,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,15 +16,13 @@ import { useCreateMedicalRecord } from "@/hooks/use-medical-records";
 import { useUpdateAppointmentStatus } from "@/hooks/use-appointments";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, Save, CheckCircle, History, FileText, ShieldCheck } from "lucide-react";
+import { Loader2, CheckCircle, History, FileText, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ptBR } from "date-fns/locale";
-
 import { Badge } from "@/components/ui/badge";
-
 import { MedicalRecordAuditLogs } from "@/components/medical-record-audit-logs";
 
 export default function AttendPage() {
@@ -36,8 +33,6 @@ export default function AttendPage() {
   const { data: appointment, isLoading } = useQuery({
     queryKey: [api.appointments.list.path, appointmentId],
     queryFn: async () => {
-      // In a real app we'd have a specific endpoint for single appointment with relations
-      // For now, we fetch list and find (inefficient but works for this demo scope)
       const res = await fetch(api.appointments.list.path);
       const list = await res.json();
       return list.find((a: any) => a.id === appointmentId);
@@ -78,6 +73,7 @@ export default function AttendPage() {
         temperature: "",
         heartRate: "",
         weight: "",
+        height: "",
       }
     }
   });
@@ -120,8 +116,6 @@ export default function AttendPage() {
     
     const record = await createRecord.mutateAsync(payload);
     await updateStatus.mutateAsync({ id: appointmentId, status: 'completed' });
-    
-    // Auto-sign after saving (simulated)
     await signMutation.mutateAsync({ recordId: record.id, hash: "sha256:" + Math.random().toString(36).substring(7) });
   };
 
@@ -137,7 +131,7 @@ export default function AttendPage() {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Receituário - ${patientName}</title>
+          <title>Receituário - \${patientName}</title>
           <style>
             body { font-family: sans-serif; padding: 40px; line-height: 1.6; }
             .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }
@@ -154,20 +148,20 @@ export default function AttendPage() {
             <p style="margin: 5px 0;">Cuidado e Tecnologia</p>
           </div>
           <div class="doctor-info">
-            <p><strong>Médico:</strong> ${doctorName}</p>
-            <p><strong>Data:</strong> ${dateStr}</p>
+            <p><strong>Médico:</strong> \${doctorName}</p>
+            <p><strong>Data:</strong> \${dateStr}</p>
           </div>
           <div class="patient-info">
-            Para: ${patientName}
+            Para: \${patientName}
           </div>
           <div class="prescription-body">
-            ${prescriptionContent || "Rx:\n\nSem medicamentos prescritos."}
+            \${prescriptionContent || "Rx:\\n\\nSem medicamentos prescritos."}
           </div>
           <div class="signature">
             Assinatura do Médico
           </div>
           <div class="footer">
-            Gerado eletronicamente via MediFlow em ${new Date().toLocaleString()}
+            Gerado eletronicamente via MediFlow em \${new Date().toLocaleString()}
           </div>
           <script>
             window.onload = () => {
@@ -192,7 +186,6 @@ export default function AttendPage() {
   return (
     <LayoutShell>
       <div className="h-[calc(100vh-8rem)] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold font-display flex items-center gap-2">
@@ -222,10 +215,8 @@ export default function AttendPage() {
           </div>
         </div>
 
-        {/* Workspace */}
         <Form {...form}>
           <div className="grid lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
-            {/* Patient Sidebar Info */}
             <Card className="lg:col-span-1 border-none shadow-sm flex flex-col h-full bg-white">
               <CardHeader className="bg-slate-50 border-b pb-4">
                 <div className="flex items-center gap-4">
@@ -242,22 +233,6 @@ export default function AttendPage() {
               </CardHeader>
               <ScrollArea className="flex-1 p-6">
                 <div className="space-y-6">
-                  <div>
-                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Informações de Contato</h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-slate-500">Telefone</p>
-                        <p className="font-medium">{appointment.patient.phone || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-500">Email</p>
-                        <p className="font-medium truncate" title={appointment.patient.email || ""}>{appointment.patient.email || "N/A"}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Separator />
-
                   <div>
                     <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3 font-bold text-primary">Triagem Realizada pela Enfermagem</h4>
                     {appointment.triageDone ? (
@@ -293,6 +268,7 @@ export default function AttendPage() {
                       </div>
                     )}
                     <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Novos Sinais Vitais (Consulta)</h4>
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
                         <p className="text-xs text-blue-600 mb-1">Pressão Arterial</p>
                         <Input 
@@ -353,15 +329,14 @@ export default function AttendPage() {
               </ScrollArea>
             </Card>
 
-            {/* Main Clinical Form */}
             <Card className="lg:col-span-2 border-none shadow-sm flex flex-col h-full overflow-hidden bg-white">
               <Tabs defaultValue="anamnesis" className="h-full flex flex-col">
                 <div className="px-6 pt-6 border-b">
-                  <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100/50 p-1">
+                  <TabsList className="grid w-full grid-cols-4 mb-6 bg-slate-100/50 p-1">
                     <TabsTrigger value="anamnesis">Anamnese</TabsTrigger>
-                    <TabsTrigger value="diagnosis">Diagnóstico e Plano</TabsTrigger>
+                    <TabsTrigger value="diagnosis">Diagnóstico</TabsTrigger>
                     <TabsTrigger value="prescription">Receituário</TabsTrigger>
-                    <TabsTrigger value="history">Audit & Histórico</TabsTrigger>
+                    <TabsTrigger value="history">Audit</TabsTrigger>
                   </TabsList>
                 </div>
 
@@ -370,104 +345,6 @@ export default function AttendPage() {
                     <MedicalRecordAuditLogs patientId={appointment.patient.id} />
                   </TabsContent>
                   <TabsContent value="anamnesis" className="space-y-6 mt-0">
-                    <FormField
-                      control={form.control}
-                      name="chiefComplaint"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Queixa Principal</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} value={field.value || ""} className="min-h-[100px] text-lg" placeholder="O paciente relata..." />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="history"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Histórico da Doença Atual</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} value={field.value || ""} className="min-h-[200px]" placeholder="Histórico detalhado..." />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="diagnosis" className="space-y-6 mt-0">
-                    <FormField
-                      control={form.control}
-                      name="diagnosis"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Diagnóstico (CID-10)</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={field.value || ""} className="text-lg" placeholder="ex: J00 Nasofaringite aguda" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="notes"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Notas de Evolução Clínica</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} value={field.value || ""} className="min-h-[250px]" placeholder="Avaliação e plano..." />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="prescription" className="space-y-6 mt-0">
-                    <div className="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-300">
-                      <div className="flex items-center gap-3 mb-4">
-                        <FileText className="w-5 h-5 text-primary" />
-                        <h3 className="font-display font-bold text-lg">Receituário Eletrônico</h3>
-                        {signMutation.isSuccess && (
-                          <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200 gap-1">
-                            <ShieldCheck className="w-3 h-3" /> Assinado Digitalmente
-                          </Badge>
-                        )}
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="prescription"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Textarea 
-                                {...field} 
-                                value={field.value || ""}
-                                className="min-h-[300px] font-mono text-sm leading-relaxed border-0 bg-transparent focus-visible:ring-0 resize-none" 
-                                placeholder="Rx:&#10;&#10;Amoxicilina 500mg&#10;1 cápsula via oral a cada 8h por 7 dias&#10;&#10;Ibuprofeno 400mg&#10;1 comprimido via oral a cada 6h em caso de dor" 
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      <Button variant="outline" className="gap-2" onClick={handlePrint}>
-                        <FileText className="w-4 h-4" />
-                        Imprimir Receita
-                      </Button>
-                    </div>
-                  </TabsContent>
-                </ScrollArea>
-              </Tabs>
-            </Card>
-          </div>
-        </Form>
-      </div>
-    </LayoutShell>
-  );
-}
-
                     <FormField
                       control={form.control}
                       name="chiefComplaint"
