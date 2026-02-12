@@ -238,6 +238,7 @@ export type Clinic = typeof clinics.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type Patient = typeof patients.$inferSelect;
 export type Appointment = typeof appointments.$inferSelect;
+export type MedicalRecord = typeof medicalRecords.$inferSelect;
 export const insertMedicalRecordLogSchema = createInsertSchema(medicalRecordLogs).omit({ id: true, createdAt: true });
 
 export type MedicalRecordLog = typeof medicalRecordLogs.$inferSelect;

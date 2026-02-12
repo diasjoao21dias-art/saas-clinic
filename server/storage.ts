@@ -241,11 +241,30 @@ export class DatabaseStorage implements IStorage {
 
   async createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord> {
     const [newRecord] = await db.insert(medicalRecords).values(record as any).returning();
+    
+    // Audit log
+    const user = await db.select().from(users).where(eq(users.id, record.doctorId)).then(r => r[0]);
+    await this.createMedicalRecordLog({
+      medicalRecordId: newRecord.id,
+      userId: record.doctorId,
+      action: 'create',
+      changes: record
+    });
+
     return newRecord;
   }
 
   async updateMedicalRecord(id: number, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
     const [updated] = await db.update(medicalRecords).set(record as any).where(eq(medicalRecords.id, id)).returning();
+    
+    // Audit log
+    await this.createMedicalRecordLog({
+      medicalRecordId: id,
+      userId: updated.doctorId,
+      action: 'update',
+      changes: record
+    });
+
     return updated;
   }
 
@@ -299,9 +318,23 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(digitalSignatures).where(eq(digitalSignatures.medicalRecordId, recordId));
   }
 
-  async getClinic(id: number): Promise<Clinic | undefined> {
-    const [clinic] = await db.select().from(clinics).where(eq(clinics.id, id));
-    return clinic;
+  async createMedicalRecordLog(log: InsertMedicalRecordLog): Promise<MedicalRecordLog> {
+    const [newLog] = await db.insert(medicalRecordLogs).values(log).returning();
+    return newLog;
+  }
+
+  async getMedicalRecordLogs(medicalRecordId: number): Promise<MedicalRecordLog[]> {
+    return await db.select().from(medicalRecordLogs)
+      .where(eq(medicalRecordLogs.medicalRecordId, medicalRecordId))
+      .orderBy(desc(medicalRecordLogs.createdAt));
+  }
+
+  async updateTriage(appointmentId: number, triageData: any): Promise<Appointment> {
+    const [updated] = await db.update(appointments)
+      .set({ triageData, triageDone: true, status: 'presente' })
+      .where(eq(appointments.id, appointmentId))
+      .returning();
+    return updated;
   }
 
   async getClinics(): Promise<Clinic[]> {
