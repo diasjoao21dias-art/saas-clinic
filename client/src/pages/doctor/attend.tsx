@@ -26,6 +26,8 @@ import { ptBR } from "date-fns/locale";
 
 import { Badge } from "@/components/ui/badge";
 
+import { MedicalRecordAuditLogs } from "@/components/medical-record-audit-logs";
+
 export default function AttendPage() {
   const { toast } = useToast();
   const [, params] = useRoute("/doctor/attend/:id");
@@ -257,19 +259,40 @@ export default function AttendPage() {
                   <Separator />
 
                   <div>
-                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Triagem e Sinais Vitais</h4>
-                    {appointment.triageDone && (
-                      <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-100 text-xs text-emerald-800">
-                        <p className="font-bold mb-1">Dados da Triagem:</p>
-                        <div className="grid grid-cols-2 gap-2">
-                          <p>PA: {appointment.triageData?.bloodPressure || '-'}</p>
-                          <p>Temp: {appointment.triageData?.temperature || '-'}</p>
-                          <p>Peso: {appointment.triageData?.weight || '-'}</p>
-                          <p>SatO2: {appointment.triageData?.oxygenSaturation || '-'}</p>
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3 font-bold text-primary">Triagem Realizada pela Enfermagem</h4>
+                    {appointment.triageDone ? (
+                      <div className="mb-4 p-4 rounded-xl bg-emerald-50 border-2 border-emerald-100 shadow-sm animate-in fade-in slide-in-from-top-2">
+                        <div className="grid grid-cols-2 gap-y-3 gap-x-4">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase text-emerald-600 font-bold">Pressão Arterial</span>
+                            <span className="text-lg font-bold text-emerald-900 leading-none">{appointment.triageData?.bloodPressure || '--/--'} <small className="text-[10px] font-normal opacity-70">mmHg</small></span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase text-emerald-600 font-bold">Temperatura</span>
+                            <span className="text-lg font-bold text-emerald-900 leading-none">{appointment.triageData?.temperature || '--'} <small className="text-[10px] font-normal opacity-70">°C</small></span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase text-emerald-600 font-bold">Peso</span>
+                            <span className="text-lg font-bold text-emerald-900 leading-none">{appointment.triageData?.weight || '--'} <small className="text-[10px] font-normal opacity-70">kg</small></span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] uppercase text-emerald-600 font-bold">Saturação O2</span>
+                            <span className="text-lg font-bold text-emerald-900 leading-none">{appointment.triageData?.oxygenSaturation || '--'} <small className="text-[10px] font-normal opacity-70">%</small></span>
+                          </div>
                         </div>
+                        {appointment.triageData?.notes && (
+                          <div className="mt-3 pt-3 border-t border-emerald-100">
+                            <span className="text-[10px] uppercase text-emerald-600 font-bold block mb-1">Notas da Enfermagem</span>
+                            <p className="text-xs text-emerald-800 italic">"{appointment.triageData.notes}"</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mb-4 p-4 rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 text-center">
+                        <p className="text-xs text-slate-500 font-medium italic">Nenhuma triagem realizada ainda</p>
                       </div>
                     )}
-                    <div className="grid grid-cols-2 gap-3">
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-3">Novos Sinais Vitais (Consulta)</h4>
                       <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
                         <p className="text-xs text-blue-600 mb-1">Pressão Arterial</p>
                         <Input 
@@ -338,11 +361,113 @@ export default function AttendPage() {
                     <TabsTrigger value="anamnesis">Anamnese</TabsTrigger>
                     <TabsTrigger value="diagnosis">Diagnóstico e Plano</TabsTrigger>
                     <TabsTrigger value="prescription">Receituário</TabsTrigger>
+                    <TabsTrigger value="history">Audit & Histórico</TabsTrigger>
                   </TabsList>
                 </div>
 
                 <ScrollArea className="flex-1 p-6">
+                  <TabsContent value="history" className="space-y-6 mt-0">
+                    <MedicalRecordAuditLogs patientId={appointment.patient.id} />
+                  </TabsContent>
                   <TabsContent value="anamnesis" className="space-y-6 mt-0">
+                    <FormField
+                      control={form.control}
+                      name="chiefComplaint"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-slate-900">Queixa Principal</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} value={field.value || ""} className="min-h-[100px] text-lg" placeholder="O paciente relata..." />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="history"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-slate-900">Histórico da Doença Atual</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} value={field.value || ""} className="min-h-[200px]" placeholder="Histórico detalhado..." />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="diagnosis" className="space-y-6 mt-0">
+                    <FormField
+                      control={form.control}
+                      name="diagnosis"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-slate-900">Diagnóstico (CID-10)</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ""} className="text-lg" placeholder="ex: J00 Nasofaringite aguda" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-semibold text-slate-900">Notas de Evolução Clínica</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} value={field.value || ""} className="min-h-[250px]" placeholder="Avaliação e plano..." />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="prescription" className="space-y-6 mt-0">
+                    <div className="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-300">
+                      <div className="flex items-center gap-3 mb-4">
+                        <FileText className="w-5 h-5 text-primary" />
+                        <h3 className="font-display font-bold text-lg">Receituário Eletrônico</h3>
+                        {signMutation.isSuccess && (
+                          <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200 gap-1">
+                            <ShieldCheck className="w-3 h-3" /> Assinado Digitalmente
+                          </Badge>
+                        )}
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="prescription"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Textarea 
+                                {...field} 
+                                value={field.value || ""}
+                                className="min-h-[300px] font-mono text-sm leading-relaxed border-0 bg-transparent focus-visible:ring-0 resize-none" 
+                                placeholder="Rx:&#10;&#10;Amoxicilina 500mg&#10;1 cápsula via oral a cada 8h por 7 dias&#10;&#10;Ibuprofeno 400mg&#10;1 comprimido via oral a cada 6h em caso de dor" 
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button variant="outline" className="gap-2" onClick={handlePrint}>
+                        <FileText className="w-4 h-4" />
+                        Imprimir Receita
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </ScrollArea>
+              </Tabs>
+            </Card>
+          </div>
+        </Form>
+      </div>
+    </LayoutShell>
+  );
+}
+
                     <FormField
                       control={form.control}
                       name="chiefComplaint"

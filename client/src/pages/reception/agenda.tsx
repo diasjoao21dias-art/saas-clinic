@@ -256,10 +256,14 @@ export default function AgendaPage() {
     const endDate = addMinutes(startDate, apt.duration);
     
     let bgColor = '#3b82f6'; // default blue
-    if (apt.status === 'finalizado') bgColor = '#10b981'; // green
-    if (apt.status === 'presente') bgColor = '#f59e0b'; // orange
-    if (apt.status === 'cancelado') bgColor = '#ef4444'; // red
-    if (apt.status === 'em_atendimento') bgColor = '#8b5cf6'; // purple
+    let textColor = '#ffffff';
+    let borderColor = 'transparent';
+    
+    if (apt.status === 'finalizado') { bgColor = '#dcfce7'; textColor = '#166534'; borderColor = '#bbf7d0'; } // green-100/green-800
+    if (apt.status === 'presente') { bgColor = '#fef3c7'; textColor = '#92400e'; borderColor = '#fde68a'; } // amber-100/amber-800
+    if (apt.status === 'cancelado') { bgColor = '#fee2e2'; textColor = '#991b1b'; borderColor = '#fecaca'; } // red-100/red-800
+    if (apt.status === 'em_atendimento') { bgColor = '#f3e8ff'; textColor = '#6b21a8'; borderColor = '#e9d5ff'; } // purple-100/purple-800
+    if (apt.status === 'confirmado') { bgColor = '#dbeafe'; textColor = '#1e40af'; borderColor = '#bfdbfe'; } // blue-100/blue-800
     
     return {
       id: apt.id.toString(),
@@ -267,6 +271,8 @@ export default function AgendaPage() {
       start: startStr,
       end: format(endDate, "yyyy-MM-dd'T'HH:mm:ss"),
       backgroundColor: bgColor,
+      textColor: textColor,
+      borderColor: borderColor,
       extendedProps: { appointment: apt }
     };
   }) || [];

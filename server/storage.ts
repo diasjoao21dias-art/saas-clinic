@@ -343,6 +343,13 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async getMedicalRecordLogs(medicalRecordId: number): Promise<MedicalRecordLog[]> {
+    return db.select()
+      .from(medicalRecordLogs)
+      .where(eq(medicalRecordLogs.medicalRecordId, medicalRecordId))
+      .orderBy(desc(medicalRecordLogs.createdAt));
+  }
+
   async getClinics(): Promise<Clinic[]> {
     return await db.select().from(clinics).orderBy(desc(clinics.createdAt));
   }
