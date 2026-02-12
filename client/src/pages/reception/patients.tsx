@@ -2,6 +2,7 @@ import LayoutShell from "@/components/layout-shell";
 import { usePatients, useCreatePatient, usePatient, useUpdatePatient } from "@/hooks/use-patients";
 import { useMedicalRecords } from "@/hooks/use-medical-records";
 import { useAppointments } from "@/hooks/use-appointments";
+import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 
 export default function PatientDirectory() {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const { data: patients, isLoading } = usePatients(search);
   const [open, setOpen] = useState(false);
@@ -31,6 +33,7 @@ export default function PatientDirectory() {
 
   const { data: selectedPatient, isLoading: isLoadingPatient } = usePatient(selectedPatientId || 0);
   const { data: medicalRecords } = useMedicalRecords(selectedPatientId || 0);
+  const isNurse = user?.role === 'nurse';
   const { data: appointments } = useAppointments({ patientId: selectedPatientId || undefined });
 
   const form = useForm<z.infer<typeof insertPatientSchema>>({
@@ -127,20 +130,20 @@ export default function PatientDirectory() {
             <p style="margin: 5px 0;">Cuidado e Tecnologia</p>
           </div>
           <div class="doctor-info">
-            <p><strong>Médico:</strong> ${doctorName}</p>
-            <p><strong>Data:</strong> ${dateStr}</p>
+            <p><strong>Médico:</strong> \${doctorName}</p>
+            <p><strong>Data:</strong> \${dateStr}</p>
           </div>
           <div class="patient-info">
-            Para: ${patientName}
+            Para: \${patientName}
           </div>
           <div class="prescription-body">
-            ${prescription || "Rx:\n\nSem medicamentos prescritos."}
+            \${prescription || "Rx:\\n\\nSem medicamentos prescritos."}
           </div>
           <div class="signature">
             Assinatura do Médico
           </div>
           <div class="footer">
-            Gerado eletronicamente via MediFlow em ${new Date().toLocaleString()}
+            Gerado eletronicamente via MediFlow em \${new Date().toLocaleString()}
           </div>
           <script>
             window.onload = () => {
@@ -175,111 +178,113 @@ export default function PatientDirectory() {
                     <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold">
                       {selectedPatient.name.charAt(0)}
                     </div>
-                    <Dialog open={editOpen} onOpenChange={setEditOpen}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          size="icon" 
-                          variant="secondary" 
-                          className="absolute bottom-0 right-0 rounded-full shadow-md"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>Editar Paciente</DialogTitle>
-                          <DialogDescription>Atualize as informações cadastrais do paciente.</DialogDescription>
-                        </DialogHeader>
-                        <Form {...editForm}>
-                          <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                              <FormField
-                                control={editForm.control}
-                                name="name"
-                                render={({ field }) => (
-                                  <FormItem className="col-span-2">
-                                    <FormLabel>Nome Completo</FormLabel>
-                                    <FormControl><Input {...field} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={editForm.control}
-                                name="cpf"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>CPF</FormLabel>
-                                    <FormControl><Input {...field} value={field.value || ""} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={editForm.control}
-                                name="birthDate"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Data de Nascimento</FormLabel>
-                                    <FormControl><Input type="date" {...field} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={editForm.control}
-                                name="phone"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Telefone</FormLabel>
-                                    <FormControl><Input {...field} value={field.value || ""} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={editForm.control}
-                                name="email"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl><Input type="email" {...field} value={field.value || ""} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={editForm.control}
-                                name="gender"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Gênero</FormLabel>
-                                    <FormControl><Input {...field} value={field.value || ""} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={editForm.control}
-                                name="address"
-                                render={({ field }) => (
-                                  <FormItem className="col-span-2">
-                                    <FormLabel>Endereço</FormLabel>
-                                    <FormControl><Input {...field} value={field.value || ""} /></FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                            <DialogFooter>
-                              <Button type="submit" disabled={updatePatient.isPending}>
-                                {updatePatient.isPending ? "Salvando..." : "Salvar Alterações"}
-                              </Button>
-                            </DialogFooter>
-                          </form>
-                        </Form>
-                      </DialogContent>
-                    </Dialog>
+                    {!isNurse && (
+                      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                        <DialogTrigger asChild>
+                          <Button 
+                            size="icon" 
+                            variant="secondary" 
+                            className="absolute bottom-0 right-0 rounded-full shadow-md"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Editar Paciente</DialogTitle>
+                            <DialogDescription>Atualize as informações cadastrais do paciente.</DialogDescription>
+                          </DialogHeader>
+                          <Form {...editForm}>
+                            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                  control={editForm.control}
+                                  name="name"
+                                  render={({ field }) => (
+                                    <FormItem className="col-span-2">
+                                      <FormLabel>Nome Completo</FormLabel>
+                                      <FormControl><Input {...field} /></FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={editForm.control}
+                                  name="cpf"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>CPF</FormLabel>
+                                      <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={editForm.control}
+                                  name="birthDate"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Data de Nascimento</FormLabel>
+                                      <FormControl><Input type="date" {...field} /></FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={editForm.control}
+                                  name="phone"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Telefone</FormLabel>
+                                      <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={editForm.control}
+                                  name="email"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Email</FormLabel>
+                                      <FormControl><Input type="email" {...field} value={field.value || ""} /></FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={editForm.control}
+                                  name="gender"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Gênero</FormLabel>
+                                      <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={editForm.control}
+                                  name="address"
+                                  render={({ field }) => (
+                                    <FormItem className="col-span-2">
+                                      <FormLabel>Endereço</FormLabel>
+                                      <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <DialogFooter>
+                                <Button type="submit" disabled={updatePatient.isPending}>
+                                  {updatePatient.isPending ? "Salvando..." : "Salvar Alterações"}
+                                </Button>
+                              </DialogFooter>
+                            </form>
+                          </Form>
+                        </DialogContent>
+                      </Dialog>
+                    )}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold">{selectedPatient.name}</h2>
@@ -360,7 +365,7 @@ export default function PatientDirectory() {
                               </TableCell>
                               <TableCell>{apt.doctor.name}</TableCell>
                               <TableCell>
-                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold \${
                                   apt.status === 'finalizado' ? 'bg-green-100 text-green-700' :
                                   apt.status === 'cancelado' ? 'bg-red-100 text-red-700' :
                                   'bg-blue-100 text-blue-700'
@@ -476,85 +481,87 @@ export default function PatientDirectory() {
             <p className="text-muted-foreground mt-1">Gerencie registros e informações dos pacientes</p>
           </div>
           
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                <Plus className="w-5 h-5 mr-2" />
-                Adicionar Paciente
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Registrar Novo Paciente</DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem className="col-span-2">
-                          <FormLabel>Nome Completo</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="cpf"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>CPF</FormLabel>
-                          <FormControl><Input {...field} value={field.value || ""} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="birthDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Data de Nascimento</FormLabel>
-                          <FormControl><Input type="date" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telefone</FormLabel>
-                          <FormControl><Input {...field} value={field.value || ""} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl><Input type="email" {...field} value={field.value || ""} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="flex justify-end pt-4">
-                    <Button type="submit" disabled={createPatient.isPending}>
-                      {createPatient.isPending ? "Criando..." : "Criar Registro do Paciente"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          {!isNurse && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Adicionar Paciente
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Registrar Novo Paciente</DialogTitle>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem className="col-span-2">
+                            <FormLabel>Nome Completo</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="cpf"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CPF</FormLabel>
+                            <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="birthDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data de Nascimento</FormLabel>
+                            <FormControl><Input type="date" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefone</FormLabel>
+                            <FormControl><Input {...field} value={field.value || ""} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl><Input type="email" {...field} value={field.value || ""} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="flex justify-end pt-4">
+                      <Button type="submit" disabled={createPatient.isPending}>
+                        {createPatient.isPending ? "Criando..." : "Criar Registro do Paciente"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         <Card className="border-none shadow-sm">
