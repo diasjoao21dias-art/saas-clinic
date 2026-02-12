@@ -267,6 +267,7 @@ export type UpdateAppointmentStatusRequest = {
   paymentMethod?: string;
   paymentStatus?: string;
   price?: number;
+  triageData?: any;
 };
 
 // Augmented types for frontend display

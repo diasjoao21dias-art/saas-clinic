@@ -9,7 +9,8 @@ import {
   type Clinic, type InsertClinic, type AvailabilityException, type InsertAvailabilityException,
   type Inventory, type InsertInventory, type InventoryTransaction, type InsertInventoryTransaction,
   type TissBill, type InsertTissBill, type DigitalSignature, type InsertDigitalSignature,
-  type MedicalRecordLog, type InsertMedicalRecordLog
+  type MedicalRecordLog, type InsertMedicalRecordLog,
+  type MedicalRecordWithDetails
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 
@@ -43,8 +44,8 @@ export interface IStorage {
   checkAvailability(clinicId: number, doctorId: number, date: string): Promise<boolean>;
 
   // Medical Records
-  getMedicalRecords(patientId: number): Promise<(MedicalRecord & { doctor: User })[]>;
-  getMedicalRecord(id: number): Promise<MedicalRecord | undefined>;
+  getMedicalRecords(patientId: number): Promise<MedicalRecordWithDetails[]>;
+  getMedicalRecord(id: number): Promise<MedicalRecordWithDetails | undefined>;
   createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord>;
   updateMedicalRecord(id: number, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord>;
   
@@ -68,6 +69,13 @@ export interface IStorage {
   // Audit Logs
   createMedicalRecordLog(log: InsertMedicalRecordLog): Promise<MedicalRecordLog>;
   getMedicalRecordLogs(medicalRecordId: number): Promise<MedicalRecordLog[]>;
+
+  // Clinics
+  getClinics(): Promise<Clinic[]>;
+  getClinic(id: number): Promise<Clinic | undefined>;
+  createClinic(clinic: InsertClinic): Promise<Clinic>;
+  updateClinic(id: number, clinic: Partial<InsertClinic>): Promise<Clinic>;
+  deleteClinic(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -82,11 +90,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsersByClinic(clinicId: number, role?: string): Promise<User[]> {
-    let query = db.select().from(users).where(eq(users.clinicId, clinicId));
     if (role) {
-      query = db.select().from(users).where(and(eq(users.clinicId, clinicId), eq(users.role, role)));
+      return await db.select().from(users).where(and(eq(users.clinicId, clinicId), eq(users.role, role)));
     }
-    return await query;
+    return await db.select().from(users).where(eq(users.clinicId, clinicId));
   }
 
   async createUser(user: InsertUser): Promise<User> {
@@ -105,12 +112,7 @@ export class DatabaseStorage implements IStorage {
 
   async getPatients(clinicId: number, search?: string): Promise<Patient[]> {
     if (search) {
-      return await db.select().from(patients).where(
-        and(
-          eq(patients.clinicId, clinicId),
-          sql`LOWER(${patients.name}) LIKE ${`%${search.toLowerCase()}%`}`
-        )
-      );
+      return await db.select().from(patients).where(and(eq(patients.clinicId, clinicId), sql`name ILIKE ${'%' + search + '%'}`));
     }
     return await db.select().from(patients).where(eq(patients.clinicId, clinicId));
   }
@@ -130,75 +132,59 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; patientId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]> {
-    const conditions = [eq(appointments.clinicId, clinicId), sql`${appointments.status} != 'cancelado'`];
+  async getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]> {
+    let query = db.select().from(appointments).where(eq(appointments.clinicId, clinicId));
     
     if (filters?.date) {
-      conditions.push(eq(appointments.date, filters.date));
+      query = db.select().from(appointments).where(and(eq(appointments.clinicId, clinicId), eq(appointments.date, filters.date)));
     } else if (filters?.startDate && filters?.endDate) {
-      conditions.push(sql`${appointments.date} >= ${filters.startDate}`);
-      conditions.push(sql`${appointments.date} <= ${filters.endDate}`);
+      query = db.select().from(appointments).where(and(eq(appointments.clinicId, clinicId), sql`date >= ${filters.startDate} AND date <= ${filters.endDate}`));
     }
-    
-    if (filters?.doctorId) conditions.push(eq(appointments.doctorId, filters.doctorId));
-    if (filters?.patientId) conditions.push(eq(appointments.patientId, filters.patientId));
-    if (filters?.status) conditions.push(eq(appointments.status, filters.status));
 
-    const result = await db.select({
-      appointment: appointments,
-      patient: patients,
-      doctor: users,
-    })
-    .from(appointments)
-    .innerJoin(patients, eq(appointments.patientId, patients.id))
-    .innerJoin(users, eq(appointments.doctorId, users.id))
-    .where(and(...conditions))
-    .orderBy(desc(appointments.date), desc(appointments.startTime));
-
-    return result.map(row => ({
-      ...row.appointment,
-      patient: row.patient,
-      doctor: row.doctor
+    const results = await query;
+    const enriched = await Promise.all(results.map(async (apt) => {
+      const [patient] = await db.select().from(patients).where(eq(patients.id, apt.patientId));
+      const [doctor] = await db.select().from(users).where(eq(users.id, apt.doctorId));
+      return { ...apt, patient, doctor } as (Appointment & { patient: Patient; doctor: User });
     }));
+
+    return enriched;
   }
 
   async getAppointment(id: number): Promise<Appointment | undefined> {
-    const [appointment] = await db.select().from(appointments).where(eq(appointments.id, id));
-    return appointment;
+    const [apt] = await db.select().from(appointments).where(eq(appointments.id, id));
+    return apt;
+  }
+
+  async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
+    const [newApt] = await db.insert(appointments).values(appointment).returning();
+    return newApt;
+  }
+
+  async updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment> {
+    const [updated] = await db.update(appointments).set(appointment).where(eq(appointments.id, id)).returning();
+    return updated;
+  }
+
+  async updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string, price?: number }): Promise<Appointment> {
+    const updateData: any = { status };
+    if (paymentDetails?.method) updateData.paymentMethod = paymentDetails.method;
+    if (paymentDetails?.status) updateData.paymentStatus = paymentDetails.status;
+    if (paymentDetails?.price) updateData.price = paymentDetails.price;
+
+    const [updated] = await db.update(appointments).set(updateData).where(eq(appointments.id, id)).returning();
+    return updated;
   }
 
   async deleteAppointment(id: number): Promise<void> {
     await db.delete(appointments).where(eq(appointments.id, id));
   }
 
-  async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
-    const [newAppointment] = await db.insert(appointments).values([appointment]).returning();
-    return newAppointment;
-  }
-
-  async updateAppointment(id: number, appointment: Partial<InsertAppointment>): Promise<Appointment> {
-    const [updated] = await db.update(appointments).set(appointment as any).where(eq(appointments.id, id)).returning();
-    return updated;
-  }
-
-  async updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string, price?: number, type?: string, examType?: string }): Promise<Appointment> {
-    const updateData: any = { status };
-    if (paymentDetails) {
-      if (paymentDetails.method) updateData.paymentMethod = paymentDetails.method;
-      if (paymentDetails.status) updateData.paymentStatus = paymentDetails.status;
-      if (paymentDetails.price !== undefined) updateData.price = Math.round(paymentDetails.price * 100);
-      if (paymentDetails.type) updateData.type = paymentDetails.type;
-      if (paymentDetails.examType) updateData.examType = paymentDetails.examType;
-    }
-    
-    const [updated] = await db.update(appointments).set(updateData).where(eq(appointments.id, id)).returning();
-    return updated;
-  }
-
   async getAvailabilityExceptions(clinicId: number, doctorId?: number, date?: string): Promise<AvailabilityException[]> {
-    const conditions = [eq(availabilityExceptions.clinicId, clinicId)];
+    let conditions = [eq(availabilityExceptions.clinicId, clinicId)];
     if (doctorId) conditions.push(eq(availabilityExceptions.doctorId, doctorId));
     if (date) conditions.push(eq(availabilityExceptions.date, date));
+    
     return await db.select().from(availabilityExceptions).where(and(...conditions));
   }
 
@@ -213,65 +199,47 @@ export class DatabaseStorage implements IStorage {
 
   async checkAvailability(clinicId: number, doctorId: number, date: string): Promise<boolean> {
     const exceptions = await this.getAvailabilityExceptions(clinicId, doctorId, date);
-    if (exceptions.length > 0) {
-      return exceptions[0].isAvailable;
-    }
-    return true;
+    const blocked = exceptions.some(ex => !ex.isAvailable);
+    return !blocked;
   }
 
-  async getMedicalRecords(patientId: number): Promise<(MedicalRecord & { doctor: User })[]> {
-    const result = await db.select({
-      record: medicalRecords,
-      doctor: users,
-    })
-    .from(medicalRecords)
-    .innerJoin(users, eq(medicalRecords.doctorId, users.id))
-    .where(eq(medicalRecords.patientId, patientId))
-    .orderBy(desc(medicalRecords.createdAt));
-
-    return result.map(row => ({
-      ...row.record,
-      doctor: row.doctor
+  async getMedicalRecords(patientId: number): Promise<MedicalRecordWithDetails[]> {
+    const records = await db.select().from(medicalRecords).where(eq(medicalRecords.patientId, patientId)).orderBy(desc(medicalRecords.createdAt));
+    return await Promise.all(records.map(async (r) => {
+      const [patient] = await db.select().from(patients).where(eq(patients.id, r.patientId));
+      const [doctor] = await db.select().from(users).where(eq(users.id, r.doctorId));
+      return { ...r, patient, doctor } as MedicalRecordWithDetails;
     }));
   }
 
-  async getMedicalRecord(id: number): Promise<MedicalRecord | undefined> {
+  async getMedicalRecord(id: number): Promise<MedicalRecordWithDetails | undefined> {
     const [record] = await db.select().from(medicalRecords).where(eq(medicalRecords.id, id));
-    return record;
+    if (!record) return undefined;
+    const [patient] = await db.select().from(patients).where(eq(patients.id, record.patientId));
+    const [doctor] = await db.select().from(users).where(eq(users.id, record.doctorId));
+    return { ...record, patient, doctor } as MedicalRecordWithDetails;
   }
 
   async createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord> {
-    const [newRecord] = await db.insert(medicalRecords).values(record as any).returning();
-    
-    // Audit log
-    const user = await db.select().from(users).where(eq(users.id, record.doctorId)).then(r => r[0]);
+    const [newRecord] = await db.insert(medicalRecords).values(record).returning();
     await this.createMedicalRecordLog({
       medicalRecordId: newRecord.id,
       userId: record.doctorId,
       action: 'create',
       changes: record
     });
-
     return newRecord;
   }
 
   async updateMedicalRecord(id: number, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord> {
     const [updated] = await db.update(medicalRecords).set(record as any).where(eq(medicalRecords.id, id)).returning();
-    
-    // Audit log
     await this.createMedicalRecordLog({
       medicalRecordId: id,
       userId: updated.doctorId,
       action: 'update',
       changes: record
     });
-
     return updated;
-  }
-
-  // Inventory
-  async deleteInventoryItem(id: number): Promise<void> {
-    await db.delete(inventory).where(eq(inventory.id, id));
   }
 
   async getInventory(clinicId: number): Promise<Inventory[]> {
@@ -288,9 +256,12 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async deleteInventoryItem(id: number): Promise<void> {
+    await db.delete(inventory).where(eq(inventory.id, id));
+  }
+
   async createInventoryTransaction(transaction: InsertInventoryTransaction): Promise<InventoryTransaction> {
     const [newTx] = await db.insert(inventoryTransactions).values(transaction).returning();
-    // Update quantity
     const [item] = await db.select().from(inventory).where(eq(inventory.id, transaction.inventoryId));
     if (item) {
       const newQty = transaction.type === 'entrada' ? item.quantity + transaction.quantity : item.quantity - transaction.quantity;
@@ -299,7 +270,6 @@ export class DatabaseStorage implements IStorage {
     return newTx;
   }
 
-  // TISS
   async getTissBills(clinicId: number): Promise<TissBill[]> {
     return await db.select().from(tissBills).where(eq(tissBills.clinicId, clinicId));
   }
@@ -309,7 +279,6 @@ export class DatabaseStorage implements IStorage {
     return newBill;
   }
 
-  // Digital Signature
   async createDigitalSignature(signature: InsertDigitalSignature): Promise<DigitalSignature> {
     const [newSig] = await db.insert(digitalSignatures).values(signature).returning();
     return newSig;
@@ -319,9 +288,12 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(digitalSignatures).where(eq(digitalSignatures.medicalRecordId, recordId));
   }
 
-  async getClinic(id: number): Promise<Clinic | undefined> {
-    const [clinic] = await db.select().from(clinics).where(eq(clinics.id, id));
-    return clinic;
+  async updateTriage(appointmentId: number, triageData: any): Promise<Appointment> {
+    const [updated] = await db.update(appointments)
+      .set({ triageData: triageData as any, triageDone: true, status: 'presente' })
+      .where(eq(appointments.id, appointmentId))
+      .returning();
+    return updated;
   }
 
   async createMedicalRecordLog(log: InsertMedicalRecordLog): Promise<MedicalRecordLog> {
@@ -335,23 +307,13 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(medicalRecordLogs.createdAt));
   }
 
-  async updateTriage(appointmentId: number, triageData: any): Promise<Appointment> {
-    const [updated] = await db.update(appointments)
-      .set({ triageData, triageDone: true, status: 'presente' })
-      .where(eq(appointments.id, appointmentId))
-      .returning();
-    return updated;
-  }
-
-  async getMedicalRecordLogs(medicalRecordId: number): Promise<MedicalRecordLog[]> {
-    return db.select()
-      .from(medicalRecordLogs)
-      .where(eq(medicalRecordLogs.medicalRecordId, medicalRecordId))
-      .orderBy(desc(medicalRecordLogs.createdAt));
-  }
-
   async getClinics(): Promise<Clinic[]> {
     return await db.select().from(clinics).orderBy(desc(clinics.createdAt));
+  }
+
+  async getClinic(id: number): Promise<Clinic | undefined> {
+    const [clinic] = await db.select().from(clinics).where(eq(clinics.id, id));
+    return clinic;
   }
 
   async createClinic(clinic: InsertClinic): Promise<Clinic> {
