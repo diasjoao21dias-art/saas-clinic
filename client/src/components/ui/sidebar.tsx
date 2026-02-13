@@ -524,14 +524,13 @@ function SidebarMenuButton({
     />
   )
 
-  if (!tooltip) {
-    return button
-  }
+  const tooltipContent = React.useMemo(() => {
+    if (!tooltip) return null
+    return typeof tooltip === "string" ? { children: tooltip } : tooltip
+  }, [tooltip])
 
-  if (typeof tooltip === "string") {
-    tooltip = {
-      children: tooltip,
-    }
+  if (!tooltipContent) {
+    return button
   }
 
   return (
@@ -541,7 +540,7 @@ function SidebarMenuButton({
         side="right"
         align="center"
         hidden={state !== "collapsed" || isMobile}
-        {...tooltip}
+        {...tooltipContent}
       />
     </Tooltip>
   )
