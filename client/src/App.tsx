@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -54,24 +55,34 @@ function ProtectedRoute({
 function Router() {
   const { user } = useAuth();
 
+  const sidebarContent = React.useMemo(() => {
+    if (!user) return null;
+    return <AppSidebar />;
+  }, [user]);
+
+  const headerContent = React.useMemo(() => {
+    if (!user) return null;
+    return (
+      <header className="flex h-16 items-center justify-between px-4 border-b shrink-0 bg-white">
+        <div className="flex items-center gap-2">
+          <SidebarTrigger data-testid="button-sidebar-toggle" />
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground hidden md:inline-block">
+            {user.clinicId ? "Unidade Principal" : "Administração Global"}
+          </span>
+        </div>
+      </header>
+    );
+  }, [user]);
+
   return (
     <SidebarProvider>
       <TooltipProvider>
         <div className="flex h-screen w-full">
-          {user && <AppSidebar />}
+          {sidebarContent}
           <div className="flex flex-col flex-1 overflow-hidden">
-            {user && (
-              <header className="flex h-16 items-center justify-between px-4 border-b shrink-0 bg-white">
-                <div className="flex items-center gap-2">
-                  <SidebarTrigger data-testid="button-sidebar-toggle" />
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground hidden md:inline-block">
-                    {user.clinicId ? "Unidade Principal" : "Administração Global"}
-                  </span>
-                </div>
-              </header>
-            )}
+            {headerContent}
             <main className="flex-1 overflow-y-auto bg-slate-50/30 p-4 md:p-6 lg:p-8">
               <Switch>
                 <Route path="/login" component={LoginPage} />

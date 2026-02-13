@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, type InsertUser } from "@shared/routes";
 import { z } from "zod";
@@ -65,12 +66,12 @@ export function useAuth() {
     },
   });
 
-  return {
+  return React.useMemo(() => ({
     user,
     isLoading,
     error,
     login: loginMutation.mutate,
     isLoggingIn: loginMutation.isPending,
     logout: logoutMutation.mutate,
-  };
+  }), [user, isLoading, error, loginMutation.mutate, loginMutation.isPending, logoutMutation.mutate]);
 }

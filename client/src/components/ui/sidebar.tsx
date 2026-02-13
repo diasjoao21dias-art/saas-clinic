@@ -73,30 +73,38 @@ function SidebarProvider({
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen)
   const open = openProp ?? _open
+
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
-      const openState = typeof value === "function" ? value(open) : value
-      if (setOpenProp) {
-        setOpenProp(openState)
-      } else {
-        _setOpen(openState)
-      }
-
-      // This sets the cookie to keep the sidebar state.
-      // Move this to a useEffect to avoid side effects during render if called incorrectly
+      _setOpen((prev) => {
+        const next = typeof value === "function" ? value(prev) : value
+        if (setOpenProp) {
+          setOpenProp(next)
+        }
+        return next
+      })
     },
-    [setOpenProp, open]
+    [setOpenProp]
   )
 
+  // Decouple cookie update from the main render cycle to prevent potential loops
+  // with browser state sync or other effects
+  const lastOpenRef = React.useRef(open)
   React.useEffect(() => {
-    document.cookie = `${SIDEBAR_COOKIE_NAME}=${open}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+    if (lastOpenRef.current !== open) {
+      document.cookie = `${SIDEBAR_COOKIE_NAME}=${open}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+      lastOpenRef.current = open
+    }
   }, [open])
 
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
-    setOpenMobile((open) => !open)
-    setOpen((open) => !open)
-  }, [setOpen, setOpenMobile])
+    if (isMobile) {
+      setOpenMobile((prev) => !prev)
+    } else {
+      setOpen((prev) => !prev)
+    }
+  }, [isMobile, setOpen, setOpenMobile])
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
