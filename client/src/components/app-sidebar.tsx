@@ -1,3 +1,4 @@
+import * as React from "react";
 import { 
   Calendar, 
   Home, 
@@ -36,7 +37,7 @@ import { Button } from "@/components/ui/button"
 export function AppSidebar() {
   const { user, logout } = useAuth()
   const [location] = useLocation()
-  const logoutMutation = { mutate: logout };
+  const logoutMutation = React.useMemo(() => ({ mutate: logout }), [logout]);
 
   const receptionItems = [
     { title: "Dashboard", url: "/reception/dashboard", icon: Activity },
