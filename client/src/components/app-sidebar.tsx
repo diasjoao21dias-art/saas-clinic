@@ -41,45 +41,46 @@ export function AppSidebar() {
     logout()
   }, [logout]);
 
-  const receptionItems = [
+  const receptionItems = React.useMemo(() => [
     { title: "Dashboard", url: "/reception/dashboard", icon: Activity },
     { title: "Agenda", url: "/reception/schedule", icon: Calendar },
     { title: "Pacientes", url: "/reception/patients", icon: UserPlus },
     { title: "Check-in", url: "/reception/checkin", icon: Clock },
-  ]
+  ], []);
 
-  const doctorItems = [
+  const doctorItems = React.useMemo(() => [
     { title: "Dashboard", url: "/doctor/dashboard", icon: Activity },
     { title: "Minha Agenda", url: "/doctor/appointments", icon: Calendar },
     { title: "Prescrições", url: "/doctor/prescriptions", icon: FileText },
     { title: "Calculadoras", url: "/doctor/calculators", icon: Calculator },
-  ]
+  ], []);
 
-  const adminItems = [
+  const adminItems = React.useMemo(() => [
     { title: "Usuários", url: "/admin/users", icon: Users },
     { title: "Clínicas", url: "/admin/clinics", icon: Building2 },
     { title: "Estoque", url: "/admin/inventory", icon: Package },
     { title: "Faturamento", url: "/admin/billing", icon: CreditCard },
-  ]
+  ], []);
 
-  const nurseItems = [
+  const nurseItems = React.useMemo(() => [
     { title: "Dashboard", url: "/nurse/dashboard", icon: Activity },
     { title: "Agenda", url: "/reception/schedule", icon: Calendar },
     { title: "Pacientes", url: "/reception/patients", icon: UserPlus },
-  ]
+  ], []);
 
-  const superAdminItems = [
+  const superAdminItems = React.useMemo(() => [
     { title: "Gestão Global", url: "/super-admin", icon: Building2 },
-  ]
+  ], []);
 
   const menuItems = React.useMemo(() => {
     if (!user) return [];
-    if (user.role === 'super_admin') return superAdminItems;
-    if (user.role === 'doctor') return doctorItems;
-    if (user.role === 'operator') return receptionItems;
-    if (user.role === 'nurse') return nurseItems;
-    return [...receptionItems, ...adminItems];
-  }, [user?.role]);
+    const items = user.role === 'super_admin' ? superAdminItems :
+                 user.role === 'doctor' ? doctorItems : 
+                 user.role === 'operator' ? receptionItems :
+                 user.role === 'nurse' ? nurseItems :
+                 [...receptionItems, ...adminItems];
+    return items;
+  }, [user?.role, superAdminItems, doctorItems, receptionItems, nurseItems, adminItems]);
 
   return (
     <Sidebar>
