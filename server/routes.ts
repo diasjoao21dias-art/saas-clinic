@@ -525,6 +525,14 @@ async function seedDatabase() {
 
     // Create Users
     await storage.createUser({
+      username: "superadmin",
+      password: "adminpassword",
+      name: "Dono do Sistema",
+      role: "super_admin",
+      clinicId: clinic.id
+    });
+
+    await storage.createUser({
       username: "admin",
       password: "password123", // In real app, hash this
       name: "Administrador do Sistema",
