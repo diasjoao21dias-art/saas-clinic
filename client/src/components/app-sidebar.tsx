@@ -72,11 +72,14 @@ export function AppSidebar() {
     { title: "Gestão Global", url: "/super-admin", icon: Building2 },
   ]
 
-  const menuItems = user?.role === 'super_admin' ? superAdminItems :
-                    user?.role === 'doctor' ? doctorItems : 
-                    user?.role === 'operator' ? receptionItems :
-                    user?.role === 'nurse' ? nurseItems :
-                    [...receptionItems, ...adminItems]
+  const menuItems = React.useMemo(() => {
+    if (!user) return [];
+    if (user.role === 'super_admin') return superAdminItems;
+    if (user.role === 'doctor') return doctorItems;
+    if (user.role === 'operator') return receptionItems;
+    if (user.role === 'nurse') return nurseItems;
+    return [...receptionItems, ...adminItems];
+  }, [user?.role]);
 
   return (
     <Sidebar>

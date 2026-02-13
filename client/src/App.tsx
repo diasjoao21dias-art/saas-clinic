@@ -62,7 +62,9 @@ function Router() {
           <div className="flex flex-col flex-1 overflow-hidden">
             {user && (
               <header className="flex h-16 items-center justify-between px-4 border-b shrink-0 bg-white">
-                <SidebarTrigger data-testid="button-sidebar-toggle" />
+                <div className="flex items-center gap-2">
+                  <SidebarTrigger data-testid="button-sidebar-toggle" />
+                </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground hidden md:inline-block">
                     {user.clinicId ? "Unidade Principal" : "Administração Global"}
