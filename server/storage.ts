@@ -25,13 +25,13 @@ export interface IStorage {
 
   // Patients
   getPatients(clinicId: number, search?: string): Promise<Patient[]>;
-  getPatient(id: number): Promise<Patient | undefined>;
+  getPatient(id: number, clinicId: number): Promise<Patient | undefined>;
   createPatient(patient: InsertPatient): Promise<Patient>;
   updatePatient(id: number, patient: Partial<InsertPatient>): Promise<Patient>;
 
   // Appointments
-  getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]>;
-  getAppointment(id: number): Promise<Appointment | undefined>;
+  getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; status?: string; patientId?: number }): Promise<(Appointment & { patient: Patient; doctor: User })[]>;
+  getAppointment(id: number, clinicId: number): Promise<Appointment | undefined>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment>;
   updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string, price?: number, type?: string, examType?: string }): Promise<Appointment>;
@@ -44,8 +44,8 @@ export interface IStorage {
   checkAvailability(clinicId: number, doctorId: number, date: string): Promise<boolean>;
 
   // Medical Records
-  getMedicalRecords(patientId: number): Promise<MedicalRecordWithDetails[]>;
-  getMedicalRecord(id: number): Promise<MedicalRecordWithDetails | undefined>;
+  getMedicalRecords(patientId: number, clinicId: number): Promise<MedicalRecordWithDetails[]>;
+  getMedicalRecord(id: number, clinicId: number): Promise<MedicalRecordWithDetails | undefined>;
   createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord>;
   updateMedicalRecord(id: number, record: Partial<InsertMedicalRecord>): Promise<MedicalRecord>;
   
@@ -117,8 +117,8 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(patients).where(eq(patients.clinicId, clinicId));
   }
 
-  async getPatient(id: number): Promise<Patient | undefined> {
-    const [patient] = await db.select().from(patients).where(eq(patients.id, id));
+  async getPatient(id: number, clinicId: number): Promise<Patient | undefined> {
+    const [patient] = await db.select().from(patients).where(and(eq(patients.id, id), eq(patients.clinicId, clinicId)));
     return patient;
   }
 
@@ -132,16 +132,28 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; status?: string }): Promise<(Appointment & { patient: Patient; doctor: User })[]> {
-    let query = db.select().from(appointments).where(eq(appointments.clinicId, clinicId));
+  async getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; status?: string; patientId?: number }): Promise<(Appointment & { patient: Patient; doctor: User })[]> {
+    let conditions = [eq(appointments.clinicId, clinicId)];
     
     if (filters?.date) {
-      query = db.select().from(appointments).where(and(eq(appointments.clinicId, clinicId), eq(appointments.date, filters.date)));
+      conditions.push(eq(appointments.date, filters.date));
     } else if (filters?.startDate && filters?.endDate) {
-      query = db.select().from(appointments).where(and(eq(appointments.clinicId, clinicId), sql`date >= ${filters.startDate} AND date <= ${filters.endDate}`));
+      conditions.push(sql`date >= ${filters.startDate} AND date <= ${filters.endDate}`);
     }
 
-    const results = await query;
+    if (filters?.doctorId) {
+      conditions.push(eq(appointments.doctorId, filters.doctorId));
+    }
+
+    if (filters?.patientId) {
+      conditions.push(eq(appointments.patientId, filters.patientId));
+    }
+
+    if (filters?.status) {
+      conditions.push(eq(appointments.status, filters.status));
+    }
+
+    const results = await db.select().from(appointments).where(and(...conditions));
     const enriched = await Promise.all(results.map(async (apt) => {
       const [patient] = await db.select().from(patients).where(eq(patients.id, apt.patientId));
       const [doctor] = await db.select().from(users).where(eq(users.id, apt.doctorId));
@@ -151,18 +163,21 @@ export class DatabaseStorage implements IStorage {
     return enriched;
   }
 
-  async getAppointment(id: number): Promise<Appointment | undefined> {
-    const [apt] = await db.select().from(appointments).where(eq(appointments.id, id));
+  async getAppointment(id: number, clinicId: number): Promise<Appointment | undefined> {
+    const [apt] = await db.select().from(appointments).where(and(eq(appointments.id, id), eq(appointments.clinicId, clinicId)));
     return apt;
   }
 
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
-    const [newApt] = await db.insert(appointments).values(appointment).returning();
+    const [newApt] = await db.insert(appointments).values([appointment]).returning();
     return newApt;
   }
 
-  async updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment> {
-    const [updated] = await db.update(appointments).set(appointment).where(eq(appointments.id, id)).returning();
+  async updateAppointment(id: number, clinicId: number, appointment: Partial<Appointment>): Promise<Appointment> {
+    const recordData = await this.getAppointment(id, clinicId);
+    if (!recordData) throw new Error("Agendamento não encontrado");
+
+    const [updated] = await db.update(appointments).set(appointment).where(and(eq(appointments.id, id), eq(appointments.clinicId, clinicId))).returning();
     return updated;
   }
 
@@ -203,8 +218,8 @@ export class DatabaseStorage implements IStorage {
     return !blocked;
   }
 
-  async getMedicalRecords(patientId: number): Promise<MedicalRecordWithDetails[]> {
-    const records = await db.select().from(medicalRecords).where(eq(medicalRecords.patientId, patientId)).orderBy(desc(medicalRecords.createdAt));
+  async getMedicalRecords(patientId: number, clinicId: number): Promise<MedicalRecordWithDetails[]> {
+    const records = await db.select().from(medicalRecords).where(and(eq(medicalRecords.patientId, patientId), eq(medicalRecords.clinicId, clinicId))).orderBy(desc(medicalRecords.createdAt));
     return await Promise.all(records.map(async (r) => {
       const [patient] = await db.select().from(patients).where(eq(patients.id, r.patientId));
       const [doctor] = await db.select().from(users).where(eq(users.id, r.doctorId));
@@ -212,8 +227,8 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getMedicalRecord(id: number): Promise<MedicalRecordWithDetails | undefined> {
-    const [record] = await db.select().from(medicalRecords).where(eq(medicalRecords.id, id));
+  async getMedicalRecord(id: number, clinicId: number): Promise<MedicalRecordWithDetails | undefined> {
+    const [record] = await db.select().from(medicalRecords).where(and(eq(medicalRecords.id, id), eq(medicalRecords.clinicId, clinicId)));
     if (!record) return undefined;
     const [patient] = await db.select().from(patients).where(eq(patients.id, record.patientId));
     const [doctor] = await db.select().from(users).where(eq(users.id, record.doctorId));
@@ -221,7 +236,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord> {
-    const [newRecord] = await db.insert(medicalRecords).values(record).returning();
+    const [newRecord] = await db.insert(medicalRecords).values([record]).returning();
     await this.createMedicalRecordLog({
       medicalRecordId: newRecord.id,
       userId: record.doctorId,

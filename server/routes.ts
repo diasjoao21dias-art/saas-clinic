@@ -82,7 +82,9 @@ export async function registerRoutes(
   });
 
   app.get(api.patients.get.path, requireAuth, async (req, res) => {
-    const patient = await storage.getPatient(Number(req.params.id));
+    // @ts-ignore
+    const clinicId = req.user!.clinicId;
+    const patient = await storage.getPatient(Number(req.params.id), clinicId);
     if (!patient) return res.status(404).json({ message: "Paciente não encontrado" });
     res.json(patient);
   });
@@ -333,12 +335,16 @@ export async function registerRoutes(
 
   // Medical Records
   app.get(api.medicalRecords.listByPatient.path, requireAuth, async (req, res) => {
-    const records = await storage.getMedicalRecords(Number(req.params.patientId));
+    // @ts-ignore
+    const clinicId = req.user!.clinicId;
+    const records = await storage.getMedicalRecords(Number(req.params.patientId), clinicId);
     res.json(records);
   });
 
   app.get(api.medicalRecords.get.path, requireAuth, async (req, res) => {
-    const record = await storage.getMedicalRecord(Number(req.params.id));
+    // @ts-ignore
+    const clinicId = req.user!.clinicId;
+    const record = await storage.getMedicalRecord(Number(req.params.id), clinicId);
     if (!record) return res.status(404).json({ message: "Registro não encontrado" });
     res.json(record);
   });
