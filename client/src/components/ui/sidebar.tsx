@@ -513,29 +513,36 @@ function SidebarMenuButton({
   const Comp = asChild ? Slot : "button"
   const { isMobile, state } = useSidebar()
 
-  const button = (
-    <Comp
-      data-slot="sidebar-menu-button"
-      data-sidebar="menu-button"
-      data-size={size}
-      data-active={isActive}
-      className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-      {...props}
-    />
-  )
-
   const tooltipContent = React.useMemo(() => {
     if (!tooltip) return null
     return typeof tooltip === "string" ? { children: tooltip } : tooltip
   }, [tooltip])
 
   if (!tooltipContent) {
-    return button
+    return (
+      <Comp
+        data-slot="sidebar-menu-button"
+        data-sidebar="menu-button"
+        data-size={size}
+        data-active={isActive}
+        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+        {...props}
+      />
+    )
   }
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipTrigger asChild>
+        <Comp
+          data-slot="sidebar-menu-button"
+          data-sidebar="menu-button"
+          data-size={size}
+          data-active={isActive}
+          className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+          {...props}
+        />
+      </TooltipTrigger>
       <TooltipContent
         side="right"
         align="center"

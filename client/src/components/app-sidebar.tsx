@@ -37,7 +37,9 @@ import { Button } from "@/components/ui/button"
 export function AppSidebar() {
   const { user, logout } = useAuth()
   const [location] = useLocation()
-  const logoutMutation = React.useMemo(() => ({ mutate: logout }), [logout]);
+  const logoutMutation = React.useCallback(() => {
+    logout()
+  }, [logout]);
 
   const receptionItems = [
     { title: "Dashboard", url: "/reception/dashboard", icon: Activity },
@@ -121,7 +123,7 @@ export function AppSidebar() {
         <Button 
           variant="outline" 
           className="w-full justify-start gap-2 h-9" 
-          onClick={() => logoutMutation.mutate()}
+          onClick={logoutMutation}
         >
           <LogOut className="h-4 w-4" />
           <span>Sair</span>
