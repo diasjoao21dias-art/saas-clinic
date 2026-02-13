@@ -56,6 +56,12 @@ export async function registerRoutes(
 
   app.put(api.users.update.path, requireAuth, async (req, res) => {
     try {
+      // @ts-ignore
+      const clinicId = req.user!.clinicId;
+      const user = await storage.getUser(Number(req.params.id));
+      if (!user || user.clinicId !== clinicId) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
       const updated = await storage.updateUser(Number(req.params.id), req.body);
       res.json(updated);
     } catch (err) {
@@ -65,6 +71,12 @@ export async function registerRoutes(
 
   app.delete(api.users.delete.path, requireAuth, async (req, res) => {
     try {
+      // @ts-ignore
+      const clinicId = req.user!.clinicId;
+      const user = await storage.getUser(Number(req.params.id));
+      if (!user || user.clinicId !== clinicId) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
       await storage.deleteUser(Number(req.params.id));
       res.sendStatus(204);
     } catch (err) {
@@ -108,6 +120,11 @@ export async function registerRoutes(
 
   app.put(api.patients.update.path, requireAuth, async (req, res) => {
     try {
+      // @ts-ignore
+      const clinicId = req.user!.clinicId;
+      const patient = await storage.getPatient(Number(req.params.id), clinicId);
+      if (!patient) return res.status(404).json({ message: "Paciente não encontrado" });
+
       const input = api.patients.update.input.parse(req.body);
       const updated = await storage.updatePatient(Number(req.params.id), input);
       res.json(updated);
@@ -190,9 +207,12 @@ export async function registerRoutes(
       // @ts-ignore
       const clinicId = req.user!.clinicId;
 
+      const currentApt = await storage.getAppointment(id, clinicId);
+      if (!currentApt) return res.status(404).json({ message: "Agendamento não encontrado" });
+
       if (input.startTime || input.date || input.doctorId) {
-        const appointmentDate = input.date || (await storage.getAppointment(id))?.date;
-        const doctorId = input.doctorId || (await storage.getAppointment(id))?.doctorId;
+        const appointmentDate = input.date || currentApt.date;
+        const doctorId = input.doctorId || currentApt.doctorId;
         
         if (appointmentDate && doctorId) {
           const existing = await storage.getAppointments(clinicId, {
@@ -200,9 +220,8 @@ export async function registerRoutes(
             doctorId: doctorId
           });
 
-          const currentApt = await storage.getAppointment(id);
-          const startTime = input.startTime || currentApt?.startTime;
-          const duration = input.duration || currentApt?.duration || 30;
+          const startTime = input.startTime || currentApt.startTime;
+          const duration = input.duration || currentApt.duration || 30;
 
           if (startTime) {
             const [startHour, startMin] = startTime.split(':').map(Number);
@@ -225,7 +244,7 @@ export async function registerRoutes(
         }
       }
 
-      const updated = await storage.updateAppointment(id, input);
+      const updated = await storage.updateAppointment(id, clinicId, input);
       res.json(updated);
     } catch (err) {
       res.status(500).json({ message: "Erro ao atualizar agendamento" });
@@ -234,6 +253,11 @@ export async function registerRoutes(
 
   app.delete("/api/appointments/:id", requireAuth, async (req, res) => {
     try {
+      // @ts-ignore
+      const clinicId = req.user!.clinicId;
+      const apt = await storage.getAppointment(Number(req.params.id), clinicId);
+      if (!apt) return res.status(404).json({ message: "Agendamento não encontrado" });
+
       await storage.deleteAppointment(Number(req.params.id));
       res.sendStatus(204);
     } catch (err) {
@@ -243,6 +267,10 @@ export async function registerRoutes(
 
   app.patch(api.appointments.updateStatus.path, requireAuth, async (req, res) => {
     const { status, paymentMethod, paymentStatus, price, triageData } = req.body;
+    // @ts-ignore
+    const clinicId = req.user!.clinicId;
+    const apt = await storage.getAppointment(Number(req.params.id), clinicId);
+    if (!apt) return res.status(404).json({ message: "Agendamento não encontrado" });
     
     if (triageData) {
       const updated = await storage.updateTriage(Number(req.params.id), triageData);
@@ -375,6 +403,11 @@ export async function registerRoutes(
   });
 
   app.put(api.medicalRecords.update.path, requireAuth, async (req, res) => {
+    // @ts-ignore
+    const clinicId = req.user!.clinicId;
+    const record = await storage.getMedicalRecord(Number(req.params.id), clinicId);
+    if (!record) return res.status(404).json({ message: "Registro não encontrado" });
+
     const updated = await storage.updateMedicalRecord(Number(req.params.id), req.body);
     res.json(updated);
   });
