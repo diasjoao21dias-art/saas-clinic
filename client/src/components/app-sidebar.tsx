@@ -65,7 +65,12 @@ export function AppSidebar() {
     { title: "Pacientes", url: "/reception/patients", icon: UserPlus },
   ]
 
-  const menuItems = user?.role === 'doctor' ? doctorItems : 
+  const superAdminItems = [
+    { title: "Gestão Global", url: "/super-admin", icon: Building2 },
+  ]
+
+  const menuItems = user?.role === 'super_admin' ? superAdminItems :
+                    user?.role === 'doctor' ? doctorItems : 
                     user?.role === 'operator' ? receptionItems :
                     user?.role === 'nurse' ? nurseItems :
                     [...receptionItems, ...adminItems]

@@ -26,6 +26,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import NurseDashboard from "@/pages/nurse/dashboard";
 import NurseTriagePage from "@/pages/nurse/triage";
+import SuperAdminPage from "@/pages/super-admin";
 
 function ProtectedRoute({ 
   component: Component, 
@@ -64,7 +65,7 @@ function Router() {
                 <SidebarTrigger data-testid="button-sidebar-toggle" />
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground hidden md:inline-block">
-                    {user.clinicId ? "Unidade Principal" : ""}
+                    {user.clinicId ? "Unidade Principal" : "Administração Global"}
                   </span>
                 </div>
               </header>
@@ -73,6 +74,11 @@ function Router() {
               <Switch>
                 <Route path="/login" component={LoginPage} />
                 
+                {/* Super Admin Routes */}
+                <Route path="/super-admin">
+                  <ProtectedRoute component={SuperAdminPage} allowedRoles={['super_admin', 'admin']} />
+                </Route>
+
                 {/* Reception Routes */}
                 <Route path="/reception/dashboard">
                   <ProtectedRoute component={ReceptionDashboard} allowedRoles={['operator', 'admin']} />
