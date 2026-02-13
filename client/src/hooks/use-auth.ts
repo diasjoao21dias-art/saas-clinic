@@ -66,12 +66,19 @@ export function useAuth() {
     },
   });
 
+  const userValue = React.useMemo(() => user, [user]);
+  const isLoadingValue = React.useMemo(() => isLoading, [isLoading]);
+  const errorValue = React.useMemo(() => error, [error]);
+  const loginFn = React.useCallback(loginMutation.mutate, [loginMutation.mutate]);
+  const isLoggingInValue = React.useMemo(() => loginMutation.isPending, [loginMutation.isPending]);
+  const logoutFn = React.useCallback(logoutMutation.mutate, [logoutMutation.mutate]);
+
   return React.useMemo(() => ({
-    user,
-    isLoading,
-    error,
-    login: loginMutation.mutate,
-    isLoggingIn: loginMutation.isPending,
-    logout: logoutMutation.mutate,
-  }), [user, isLoading, error, loginMutation.mutate, loginMutation.isPending, logoutMutation.mutate]);
+    user: userValue,
+    isLoading: isLoadingValue,
+    error: errorValue,
+    login: loginFn,
+    isLoggingIn: isLoggingInValue,
+    logout: logoutFn,
+  }), [userValue, isLoadingValue, errorValue, loginFn, isLoggingInValue, logoutFn]);
 }

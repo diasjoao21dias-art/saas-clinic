@@ -79,7 +79,11 @@ function SidebarProvider({
       _setOpen((prev) => {
         const next = typeof value === "function" ? value(prev) : value
         if (setOpenProp) {
-          setOpenProp(next)
+          // Wrap in requestAnimationFrame to decouple from the current render cycle
+          // and prevent infinite update loops
+          window.requestAnimationFrame(() => {
+            setOpenProp(next)
+          })
         }
         return next
       })
