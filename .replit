@@ -43,3 +43,8 @@ waitForPort = 5000
 
 [agent]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+SUPABASE_DB_URL = "postgresql://postgres:[YOUR-PASSWORD]@db.nfumddlrdlltlkjkkvww.supabase.co:5432/postgres"
