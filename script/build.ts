@@ -46,7 +46,8 @@ async function buildAll() {
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.devDependencies || {}),
   ];
-  const externals = allDeps.filter((dep) => !allowlist.includes(dep));
+  // Ensure esbuild and vite are always external to avoid bundling issues
+  const externals = allDeps.filter((dep) => !allowlist.includes(dep) || dep === "esbuild" || dep === "vite");
 
   await esbuild({
     entryPoints: ["server/index.ts"],
