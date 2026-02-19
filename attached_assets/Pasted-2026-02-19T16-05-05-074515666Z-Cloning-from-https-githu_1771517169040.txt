@@ -1,0 +1,44 @@
+2026-02-19T16:05:05.074515666Z ==> Cloning from https://github.com/diasjoao21dias-art/saas-clinic
+2026-02-19T16:05:06.159302175Z ==> Checking out commit 62ca1ffc2ee3d3b713cb45eb927f4328336782ae in branch main
+2026-02-19T16:05:25.32333068Z ==> Using Node.js version 22.22.0 (default)
+2026-02-19T16:05:25.347472463Z ==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+2026-02-19T16:05:29.392937813Z ==> Running build command 'npm install && npm run build'...
+2026-02-19T16:05:39.126120492Z 
+2026-02-19T16:05:39.126149814Z added 459 packages, and audited 460 packages in 10s
+2026-02-19T16:05:39.126159634Z 
+2026-02-19T16:05:39.126185645Z 75 packages are looking for funding
+2026-02-19T16:05:39.126194366Z   run `npm fund` for details
+2026-02-19T16:05:39.129899907Z 
+2026-02-19T16:05:39.129909818Z 5 vulnerabilities (1 low, 1 moderate, 3 high)
+2026-02-19T16:05:39.129913708Z 
+2026-02-19T16:05:39.129918139Z To address all issues, run:
+2026-02-19T16:05:39.129922239Z   npm audit fix
+2026-02-19T16:05:39.129925889Z 
+2026-02-19T16:05:39.129929719Z Run `npm audit` for details.
+2026-02-19T16:05:39.326216559Z 
+2026-02-19T16:05:39.326252551Z > rest-express@1.0.0 build
+2026-02-19T16:05:39.326258201Z > vite build && esbuild server/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/index.js --external:express --external:pg --external:drizzle-orm --external:passport --external:express-session --external:connect-pg-simple --external:nanoid --external:vite --external:ws --external:passport-local --external:crypto --external:path --external:url --external:http --external:fs --external:@babel/core --external:lightningcss
+2026-02-19T16:05:39.326265601Z 
+2026-02-19T16:05:39.590818777Z vite v7.3.0 building client environment for production...
+2026-02-19T16:05:39.653270028Z transforming...
+2026-02-19T16:05:39.918840364Z ✓ 3 modules transformed.
+2026-02-19T16:05:39.919147479Z ✗ Build failed in 302ms
+2026-02-19T16:05:39.919199451Z error during build:
+2026-02-19T16:05:39.919206382Z [vite:css] Failed to load PostCSS config (searchPath: /opt/render/project/src/client): [Error] Loading PostCSS Plugin failed: Cannot find module 'autoprefixer'
+2026-02-19T16:05:39.919210622Z Require stack:
+2026-02-19T16:05:39.919214892Z - /opt/render/project/src/postcss.config.js
+2026-02-19T16:05:39.919218522Z 
+2026-02-19T16:05:39.919222412Z (@/opt/render/project/src/postcss.config.js)
+2026-02-19T16:05:39.919227493Z Error: Loading PostCSS Plugin failed: Cannot find module 'autoprefixer'
+2026-02-19T16:05:39.919231313Z Require stack:
+2026-02-19T16:05:39.919235173Z - /opt/render/project/src/postcss.config.js
+2026-02-19T16:05:39.919238793Z 
+2026-02-19T16:05:39.919242533Z (@/opt/render/project/src/postcss.config.js)
+2026-02-19T16:05:39.919246844Z     at load (file:///opt/render/project/src/node_modules/vite/dist/node/chunks/config.js:7660:10)
+2026-02-19T16:05:39.919251044Z     at async Promise.all (index 1)
+2026-02-19T16:05:39.919255264Z     at async plugins (file:///opt/render/project/src/node_modules/vite/dist/node/chunks/config.js:7682:11)
+2026-02-19T16:05:39.919259094Z     at async processResult (file:///opt/render/project/src/node_modules/vite/dist/node/chunks/config.js:7721:13)
+2026-02-19T16:05:39.919274665Z file: /opt/render/project/src/client/src/index.css
+2026-02-19T16:05:39.919277275Z 
+2026-02-19T16:05:40.012127346Z ==> Build failed 😞
+2026-02-19T16:05:40.012144537Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
