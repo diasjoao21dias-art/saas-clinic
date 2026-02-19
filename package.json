@@ -5,8 +5,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx server/index.ts",
-    "build": "tsc",
-    "start": "node dist/server/index.js",
+    "build": "vite build && esbuild server/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/index.cjs --external:express --external:pg --external:drizzle-orm --external:passport --external:express-session --external:connect-pg-simple --external:nanoid",
+    "start": "node dist/index.cjs",
     "check": "tsc",
     "db:push": "drizzle-kit push"
   },
