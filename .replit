@@ -48,3 +48,4 @@ expertMode = true
 
 [userenv.shared]
 SUPABASE_DB_URL = "postgresql://postgres:[YOUR-PASSWORD]@db.nfumddlrdlltlkjkkvww.supabase.co:5432/postgres"
+DATABASE_URL_EXTERNAL = "postgresql://postgres:milena21dom21@db.zbqploiqxrlsktpxzaar.supabase.co:5432/postgres"
