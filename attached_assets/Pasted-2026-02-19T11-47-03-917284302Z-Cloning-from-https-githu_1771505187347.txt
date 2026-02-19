@@ -1,0 +1,42 @@
+2026-02-19T11:47:03.917284302Z ==> Cloning from https://github.com/diasjoao21dias-art/saas-clinic
+2026-02-19T11:47:04.947107601Z ==> Checking out commit 357bdbdb17541a5bf735c7e150d30053d571999a in branch main
+2026-02-19T11:47:32.405783986Z ==> Using Node.js version 22.22.0 (default)
+2026-02-19T11:47:32.441849445Z ==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+2026-02-19T11:47:35.173187953Z ==> Running build command 'npm install; npm run build'...
+2026-02-19T11:47:43.95990294Z 
+2026-02-19T11:47:43.95992339Z added 395 packages, and audited 396 packages in 9s
+2026-02-19T11:47:43.960023583Z 
+2026-02-19T11:47:43.960041473Z 63 packages are looking for funding
+2026-02-19T11:47:43.960047703Z   run `npm fund` for details
+2026-02-19T11:47:43.965636875Z 
+2026-02-19T11:47:43.965656135Z 5 vulnerabilities (1 low, 1 moderate, 3 high)
+2026-02-19T11:47:43.965660925Z 
+2026-02-19T11:47:43.965666015Z To address all issues, run:
+2026-02-19T11:47:43.965670616Z   npm audit fix
+2026-02-19T11:47:43.965674716Z 
+2026-02-19T11:47:43.965678976Z Run `npm audit` for details.
+2026-02-19T11:47:44.150196069Z 
+2026-02-19T11:47:44.150217289Z > rest-express@1.0.0 build
+2026-02-19T11:47:44.150220709Z > npx tsx script/build.ts
+2026-02-19T11:47:44.15022371Z 
+2026-02-19T11:47:47.058672247Z 
+2026-02-19T11:47:47.058723578Z node:internal/modules/run_main:123
+2026-02-19T11:47:47.058730348Z     triggerUncaughtException(
+2026-02-19T11:47:47.058735089Z     ^
+2026-02-19T11:47:47.058776469Z Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'esbuild' imported from /opt/render/project/src/script/build.ts
+2026-02-19T11:47:47.05878653Z     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:314:9)
+2026-02-19T11:47:47.05879133Z     at packageResolve (node:internal/modules/esm/resolve:767:81)
+2026-02-19T11:47:47.05879517Z     at moduleResolve (node:internal/modules/esm/resolve:853:18)
+2026-02-19T11:47:47.05879877Z     at defaultResolve (node:internal/modules/esm/resolve:983:11)
+2026-02-19T11:47:47.05880235Z     at nextResolve (node:internal/modules/esm/hooks:748:28)
+2026-02-19T11:47:47.05880607Z     at resolveBase (file:///opt/render/.cache/_npx/fd45a72a545557e9/node_modules/tsx/dist/esm/index.mjs?1771501666951:2:3744)
+2026-02-19T11:47:47.0588103Z     at resolveDirectory (file:///opt/render/.cache/_npx/fd45a72a545557e9/node_modules/tsx/dist/esm/index.mjs?1771501666951:2:4243)
+2026-02-19T11:47:47.05881395Z     at resolveTsPaths (file:///opt/render/.cache/_npx/fd45a72a545557e9/node_modules/tsx/dist/esm/index.mjs?1771501666951:2:4984)
+2026-02-19T11:47:47.05881767Z     at async resolve (file:///opt/render/.cache/_npx/fd45a72a545557e9/node_modules/tsx/dist/esm/index.mjs?1771501666951:2:5355)
+2026-02-19T11:47:47.058821991Z     at async nextResolve (node:internal/modules/esm/hooks:748:22) {
+2026-02-19T11:47:47.058825731Z   code: 'ERR_MODULE_NOT_FOUND'
+2026-02-19T11:47:47.058829391Z }
+2026-02-19T11:47:47.058832851Z 
+2026-02-19T11:47:47.058836441Z Node.js v22.22.0
+2026-02-19T11:47:47.158453985Z ==> Build failed 😞
+2026-02-19T11:47:47.158471786Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
