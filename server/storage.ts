@@ -186,8 +186,11 @@ export class DatabaseStorage implements IStorage {
     return newApt;
   }
 
-  async updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment> {
-    const [updated] = await db.update(appointments).set(appointment).where(eq(appointments.id, id)).returning();
+  async updateAppointment(id: number, clinicId: number, appointment: Partial<Appointment>): Promise<Appointment> {
+    const [updated] = await db.update(appointments)
+      .set(appointment)
+      .where(and(eq(appointments.id, id), eq(appointments.clinicId, clinicId)))
+      .returning();
     return updated;
   }
 

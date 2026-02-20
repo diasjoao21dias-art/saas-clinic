@@ -210,36 +210,34 @@ export async function registerRoutes(
       const currentApt = await storage.getAppointment(id, clinicId);
       if (!currentApt) return res.status(404).json({ message: "Agendamento não encontrado" });
 
+      // Se estiver alterando horário, data ou médico, validar conflitos
       if (input.startTime || input.date || input.doctorId) {
         const appointmentDate = input.date || currentApt.date;
         const doctorId = input.doctorId || currentApt.doctorId;
-        
-        if (appointmentDate && doctorId) {
+        const startTime = input.startTime || currentApt.startTime;
+        const duration = input.duration || currentApt.duration || 30;
+
+        if (appointmentDate && doctorId && startTime) {
           const existing = await storage.getAppointments(clinicId, {
             date: appointmentDate,
             doctorId: doctorId
           });
 
-          const startTime = input.startTime || currentApt.startTime;
-          const duration = input.duration || currentApt.duration || 30;
+          const [startHour, startMin] = startTime.split(':').map(Number);
+          const startMinutes = startHour * 60 + startMin;
+          const endMinutes = startMinutes + duration;
 
-          if (startTime) {
-            const [startHour, startMin] = startTime.split(':').map(Number);
-            const startMinutes = startHour * 60 + startMin;
-            const endMinutes = startMinutes + duration;
+          const hasConflict = existing.some(apt => {
+            if (apt.id === id || apt.status === 'cancelado') return false;
+            const [aptHour, aptMin] = apt.startTime.split(':').map(Number);
+            const aptStartMinutes = aptHour * 60 + aptMin;
+            const aptEndMinutes = aptStartMinutes + apt.duration;
 
-            const hasConflict = existing.some(apt => {
-              if (apt.id === id) return false;
-              const [aptHour, aptMin] = apt.startTime.split(':').map(Number);
-              const aptStartMinutes = aptHour * 60 + aptMin;
-              const aptEndMinutes = aptStartMinutes + apt.duration;
+            return (startMinutes < aptEndMinutes && endMinutes > aptStartMinutes);
+          });
 
-              return (startMinutes < aptEndMinutes && endMinutes > aptStartMinutes);
-            });
-
-            if (hasConflict) {
-              return res.status(400).json({ message: "Este horário já está ocupado para este médico." });
-            }
+          if (hasConflict) {
+            return res.status(400).json({ message: "Este horário já está ocupado para este médico." });
           }
         }
       }
@@ -247,6 +245,7 @@ export async function registerRoutes(
       const updated = await storage.updateAppointment(id, clinicId, input);
       res.json(updated);
     } catch (err) {
+      console.error("Erro ao atualizar agendamento:", err);
       res.status(500).json({ message: "Erro ao atualizar agendamento" });
     }
   });
