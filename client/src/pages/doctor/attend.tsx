@@ -352,33 +352,42 @@ export default function AttendPage() {
             <Card className="lg:col-span-2 border-none shadow-sm flex flex-col h-full overflow-hidden bg-white">
               <Tabs defaultValue="anamnesis" className="h-full flex flex-col">
                   <div className="px-6 pt-6 border-b">
-                    <TabsList className="grid w-full grid-cols-4 mb-6 bg-slate-100/50 p-1">
-                      <TabsTrigger value="anamnesis">Anamnese</TabsTrigger>
-                      <TabsTrigger value="diagnosis">Diagnóstico</TabsTrigger>
-                      <TabsTrigger value="prescription">Receituário</TabsTrigger>
-                      <TabsTrigger value="history">Audit</TabsTrigger>
-                    </TabsList>
+                  <TabsList className="grid w-full grid-cols-4 mb-6 bg-slate-100/50 p-1 h-12">
+                    <TabsTrigger value="anamnesis" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm py-2 text-sm font-semibold border-transparent data-[state=active]:border-primary/10 border transition-all">Anamnese</TabsTrigger>
+                    <TabsTrigger value="diagnosis" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm py-2 text-sm font-semibold border-transparent data-[state=active]:border-primary/10 border transition-all">Diagnóstico</TabsTrigger>
+                    <TabsTrigger value="prescription" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm py-2 text-sm font-semibold border-transparent data-[state=active]:border-primary/10 border transition-all">Receituário</TabsTrigger>
+                    <TabsTrigger value="history" className="data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm py-2 text-sm font-semibold border-transparent data-[state=active]:border-primary/10 border transition-all">Audit</TabsTrigger>
+                  </TabsList>
                   </div>
 
                   <ScrollArea className="flex-1 p-6">
                     {appointment?.aiSummary && (
-                      <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-in fade-in slide-in-from-top-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2 text-primary">
-                            <ShieldCheck className="w-4 h-4" />
-                            <h4 className="text-sm font-bold font-display">Resumo Inteligente</h4>
-                          </div>
-                          <Badge variant="outline" className="bg-white/50 text-[10px] h-4">Sincronizado com Histórico</Badge>
+                      <div className="mb-6 p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 shadow-sm animate-in fade-in slide-in-from-top-4 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-2 opacity-10">
+                          <ShieldCheck className="w-24 h-24 rotate-12" />
                         </div>
-                        <p className="text-sm text-slate-700 mb-3 leading-relaxed">
+                        <div className="flex items-center justify-between mb-4 relative z-10">
+                          <div className="flex items-center gap-3 text-primary">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                              <ShieldCheck className="w-5 h-5" />
+                            </div>
+                            <h4 className="text-base font-bold font-display tracking-tight">Resumo Inteligente & Insights</h4>
+                          </div>
+                          <Badge variant="outline" className="bg-white/80 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border-primary/20">Sincronizado</Badge>
+                        </div>
+                        <p className="text-sm text-slate-700 mb-6 leading-relaxed relative z-10 font-medium">
                           {appointment.aiSummary}
                         </p>
                         {appointment.followUpTasks && appointment.followUpTasks.length > 0 && (
-                          <div className="space-y-2">
-                            <h5 className="text-[10px] uppercase font-bold text-primary/60 tracking-wider">Follow-up Automático</h5>
-                            <div className="flex flex-wrap gap-2">
+                          <div className="space-y-3 relative z-10">
+                            <div className="flex items-center gap-2">
+                              <div className="h-px flex-1 bg-primary/20" />
+                              <h5 className="text-[10px] uppercase font-black text-primary/40 tracking-[0.2em]">Follow-up Automático</h5>
+                              <div className="h-px flex-1 bg-primary/20" />
+                            </div>
+                            <div className="flex flex-wrap gap-2.5">
                               {appointment.followUpTasks.map((task: string, i: number) => (
-                                <Badge key={i} variant="secondary" className="bg-white/50 text-primary border-primary/10">
+                                <Badge key={i} variant="secondary" className="bg-white/90 text-primary border-primary/10 hover:bg-primary hover:text-white transition-colors cursor-default py-1 px-3 shadow-sm font-semibold">
                                   {task}
                                 </Badge>
                               ))}
@@ -391,14 +400,18 @@ export default function AttendPage() {
                     <MedicalRecordAuditLogs patientId={appointment.patient.id} />
                   </TabsContent>
                   <TabsContent value="anamnesis" className="space-y-6 mt-0">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold font-display text-slate-800">Anamnese Detalhada</h3>
+                      <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">Padrão Ouro</Badge>
+                    </div>
                     <FormField
                       control={form.control}
                       name="chiefComplaint"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Queixa Principal</FormLabel>
+                        <FormItem className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                          <FormLabel className="text-sm font-bold text-slate-700 uppercase tracking-tight">Queixa Principal</FormLabel>
                           <FormControl>
-                            <Textarea {...field} value={field.value || ""} className="min-h-[100px] text-lg" placeholder="O paciente relata..." />
+                            <Textarea {...field} value={field.value || ""} className="min-h-[100px] text-lg bg-white border-slate-200 focus-visible:ring-primary/20" placeholder="O paciente relata..." />
                           </FormControl>
                         </FormItem>
                       )}
@@ -407,10 +420,10 @@ export default function AttendPage() {
                       control={form.control}
                       name="history"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Histórico da Doença Atual</FormLabel>
+                        <FormItem className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                          <FormLabel className="text-sm font-bold text-slate-700 uppercase tracking-tight">Histórico da Doença Atual (HDA)</FormLabel>
                           <FormControl>
-                            <Textarea {...field} value={field.value || ""} className="min-h-[200px]" placeholder="Histórico detalhado..." />
+                            <Textarea {...field} value={field.value || ""} className="min-h-[250px] bg-white border-slate-200 focus-visible:ring-primary/20 leading-relaxed" placeholder="Descreva a evolução dos sintomas, tratamentos anteriores e estado atual..." />
                           </FormControl>
                         </FormItem>
                       )}
@@ -418,14 +431,20 @@ export default function AttendPage() {
                   </TabsContent>
 
                   <TabsContent value="diagnosis" className="space-y-6 mt-0">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold font-display text-slate-800">Definição Diagnóstica</h3>
+                      <div className="flex gap-2">
+                         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-100">CID-10 Ativo</Badge>
+                      </div>
+                    </div>
                     <FormField
                       control={form.control}
                       name="diagnosis"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Diagnóstico (CID-10)</FormLabel>
+                        <FormItem className="bg-blue-50/30 p-4 rounded-xl border border-blue-100/50">
+                          <FormLabel className="text-sm font-bold text-blue-700 uppercase tracking-tight">Hipótese Diagnóstica / CID-10</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value || ""} className="text-lg" placeholder="ex: J00 Nasofaringite aguda" />
+                            <Input {...field} value={field.value || ""} className="text-lg bg-white border-blue-200 focus-visible:ring-blue-200" placeholder="Digite o código ou nome da patologia (ex: J00)" />
                           </FormControl>
                         </FormItem>
                       )}
@@ -434,10 +453,10 @@ export default function AttendPage() {
                       control={form.control}
                       name="notes"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-base font-semibold text-slate-900">Notas de Evolução Clínica</FormLabel>
+                        <FormItem className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                          <FormLabel className="text-sm font-bold text-slate-700 uppercase tracking-tight">Conduta e Evolução Clínica</FormLabel>
                           <FormControl>
-                            <Textarea {...field} value={field.value || ""} className="min-h-[250px]" placeholder="Avaliação e plano..." />
+                            <Textarea {...field} value={field.value || ""} className="min-h-[250px] bg-white border-slate-200 focus-visible:ring-primary/20" placeholder="Avaliação detalhada, plano terapêutico e orientações dadas ao paciente..." />
                           </FormControl>
                         </FormItem>
                       )}
@@ -445,36 +464,65 @@ export default function AttendPage() {
                   </TabsContent>
 
                   <TabsContent value="prescription" className="space-y-6 mt-0">
-                    <div className="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-300">
-                      <div className="flex items-center gap-3 mb-4">
-                        <FileText className="w-5 h-5 text-primary" />
-                        <h3 className="font-display font-bold text-lg">Receituário Eletrônico</h3>
+                    <div className="bg-white p-8 rounded-2xl border-2 border-slate-200 shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-16 -mt-16 z-0" />
+                      <div className="flex items-center gap-3 mb-8 relative z-10">
+                        <div className="p-3 bg-primary/10 rounded-xl">
+                          <FileText className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-display font-bold text-xl text-slate-900">Receituário Eletrônico</h3>
+                          <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Documento Digital Válido</p>
+                        </div>
                         {signMutation.isSuccess && (
-                          <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200 gap-1">
-                            <ShieldCheck className="w-3 h-3" /> Assinado Digitalmente
+                          <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200 gap-1.5 px-3 py-1">
+                            <ShieldCheck className="w-4 h-4" /> Assinado Digitalmente
                           </Badge>
                         )}
                       </div>
+                      
+                      <div className="mb-6 p-4 border-l-4 border-primary bg-slate-50/50 rounded-r-lg">
+                         <p className="text-sm font-bold text-slate-900">{appointment.patient.name}</p>
+                         <p className="text-xs text-slate-500">Data: {format(new Date(), 'dd/MM/yyyy')}</p>
+                      </div>
+
                       <FormField
                         control={form.control}
                         name="prescription"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="relative z-10">
                             <FormControl>
-                              <Textarea 
-                                {...field} 
-                                value={field.value || ""}
-                                className="min-h-[300px] font-mono text-sm leading-relaxed border-0 bg-transparent focus-visible:ring-0 resize-none" 
-                                placeholder="Rx:&#10;&#10;Amoxicilina 500mg&#10;1 cápsula via oral a cada 8h por 7 dias&#10;&#10;Ibuprofeno 400mg&#10;1 comprimido via oral a cada 6h em caso de dor" 
-                              />
+                              <div className="bg-slate-50/30 rounded-xl border border-slate-100 p-2">
+                                <Textarea 
+                                  {...field} 
+                                  value={field.value || ""}
+                                  className="min-h-[350px] font-mono text-base leading-relaxed border-0 bg-transparent focus-visible:ring-0 resize-none placeholder:italic placeholder:text-slate-400" 
+                                  placeholder="Rx:&#10;&#10;Descreva aqui a medicação, dosagem e via de administração..." 
+                                />
+                              </div>
                             </FormControl>
                           </FormItem>
                         )}
                       />
+                      
+                      <div className="mt-8 pt-8 border-t border-slate-100 flex justify-between items-end italic text-[10px] text-slate-400">
+                        <div>
+                           <p>Emitido eletronicamente por {appointment.doctor.name}</p>
+                           <p>CRM: {appointment.doctor.crm || 'N/A'}</p>
+                        </div>
+                        <div className="text-right">
+                           <p>MediFlow Healthcare System</p>
+                           <p>Autenticidade garantida via Assinatura Digital</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-end">
-                      <Button variant="outline" className="gap-2" onClick={handlePrint}>
+                    <div className="flex justify-end gap-3">
+                      <Button variant="outline" className="gap-2 border-slate-200 hover:bg-slate-50" onClick={handlePrint}>
                         <FileText className="w-4 h-4" />
+                        Visualizar PDF
+                      </Button>
+                      <Button variant="outline" className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100" onClick={handlePrint}>
+                        <CheckCircle className="w-4 h-4" />
                         Imprimir Receita
                       </Button>
                     </div>
