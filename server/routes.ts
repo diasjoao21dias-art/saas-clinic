@@ -284,6 +284,36 @@ export async function registerRoutes(
     res.json(updated);
   });
 
+  // AI & Automation Endpoints
+  app.post("/api/appointments/:id/ai-process", requireAuth, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      // @ts-ignore
+      const clinicId = req.user!.clinicId;
+      const apt = await storage.getAppointment(id, clinicId);
+      if (!apt) return res.status(404).json({ message: "Agendamento não encontrado" });
+
+      const records = await storage.getMedicalRecords(apt.patientId, clinicId);
+      const latestRecord = records[0];
+
+      // Simulated AI Processing
+      const aiSummary = latestRecord 
+        ? `Resumo da última consulta (${latestRecord.createdAt}): ${latestRecord.diagnosis}. Conduta: ${latestRecord.prescription}.`
+        : "Nenhum histórico anterior relevante encontrado.";
+      
+      const followUpTasks = [
+        "Verificar exames laboratoriais",
+        "Retorno em 30 dias",
+        "Monitorar pressão arterial"
+      ];
+
+      const updated = await storage.updateAppointmentAI(id, { aiSummary, followUpTasks });
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Erro ao processar IA" });
+    }
+  });
+
   // Availability Exceptions
   app.get("/api/availability-exceptions", requireAuth, async (req, res) => {
     try {

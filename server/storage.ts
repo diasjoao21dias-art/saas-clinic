@@ -70,7 +70,7 @@ export interface IStorage {
 
   // Triage
   updateTriage(appointmentId: number, triageData: any): Promise<Appointment>;
-
+  updateAppointmentAI(id: number, data: { aiSummary?: string, followUpTasks?: string[] }): Promise<Appointment>;
   // Audit Logs
   createMedicalRecordLog(log: InsertMedicalRecordLog): Promise<MedicalRecordLog>;
   getMedicalRecordLogs(medicalRecordId: number): Promise<MedicalRecordLog[]>;
@@ -190,6 +190,14 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db.update(appointments)
       .set(appointment)
       .where(and(eq(appointments.id, id), eq(appointments.clinicId, clinicId)))
+      .returning();
+    return updated;
+  }
+
+  async updateAppointmentAI(id: number, data: { aiSummary?: string, followUpTasks?: string[] }): Promise<Appointment> {
+    const [updated] = await db.update(appointments)
+      .set(data as any)
+      .where(eq(appointments.id, id))
       .returning();
     return updated;
   }

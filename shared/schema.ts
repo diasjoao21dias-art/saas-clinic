@@ -114,6 +114,12 @@ export const appointments = sqliteTable("appointments", {
     oxygenSaturation?: string;
     notes?: string;
   }>(),
+  // New fields for enhancements
+  priority: integer("priority").default(1).notNull(), // 1: Low, 2: Medium, 3: High
+  isFocusTime: integer("is_focus_time", { mode: "boolean" }).default(false).notNull(),
+  notificationSent: integer("notification_sent", { mode: "boolean" }).default(false).notNull(),
+  aiSummary: text("ai_summary"),
+  followUpTasks: text("follow_up_tasks", { mode: "json" }).$type<string[]>(),
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
