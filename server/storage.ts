@@ -271,7 +271,7 @@ export class DatabaseStorage implements IStorage {
     await this.createMedicalRecordLog({
       medicalRecordId: newRecord.id,
       userId: record.doctorId,
-      action: 'create',
+      action: record.status === 'rascunho' ? 'draft' : 'create',
       changes: record
     });
     return newRecord;

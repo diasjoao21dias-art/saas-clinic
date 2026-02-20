@@ -424,8 +424,8 @@ export async function registerRoutes(
         clinicId: req.user!.clinicId,
       });
       
-      // Auto-update appointment status to completed if record is created
-      if (input.appointmentId) {
+      // Auto-update appointment status to completed if record is created and NOT a draft
+      if (input.appointmentId && input.status !== 'rascunho') {
         await storage.updateAppointmentStatus(input.appointmentId, 'finalizado');
       }
 

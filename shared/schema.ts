@@ -156,6 +156,7 @@ export const medicalRecords = sqliteTable("medical_records", {
   diagnosis: text("diagnosis"),
   prescription: text("prescription"),
   notes: text("notes"), // Evolution notes
+  status: text("status").default("finalizado").notNull(), // 'rascunho', 'finalizado'
   
   createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });

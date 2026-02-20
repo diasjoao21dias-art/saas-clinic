@@ -24,6 +24,23 @@ import { useToast } from "@/hooks/use-toast";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { MedicalRecordAuditLogs } from "@/components/medical-record-audit-logs";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Save } from "lucide-react";
+
+const COMMON_MEDICATIONS = [
+  { name: "Amoxicilina 500mg", instructions: "1 cápsula via oral a cada 8h por 7 dias" },
+  { name: "Ibuprofeno 400mg", instructions: "1 comprimido via oral a cada 6h em caso de dor" },
+  { name: "Dipirona 500mg", instructions: "1 comprimido via oral a cada 6h em caso de febre ou dor" },
+  { name: "Paracetamol 750mg", instructions: "1 comprimido via oral a cada 6h em caso de dor" },
+  { name: "Omeprazol 20mg", instructions: "1 cápsula via oral em jejum" },
+  { name: "Losartana 50mg", instructions: "1 comprimido via oral 1x ao dia" },
+  { name: "Metformina 850mg", instructions: "1 comprimido via oral após o jantar" },
+];
 
 export default function AttendPage() {
   const { toast } = useToast();
@@ -105,18 +122,23 @@ export default function AttendPage() {
     );
   }
 
-  const onSubmit = async (data: InsertMedicalRecord) => {
+  const onSubmit = async (data: InsertMedicalRecord, isDraft = false) => {
     const payload = {
       ...data,
       patientId: appointment.patient.id,
       doctorId: appointment.doctor.id,
       clinicId: appointment.clinicId,
-      appointmentId: appointment.id
+      appointmentId: appointment.id,
+      status: isDraft ? 'rascunho' : 'finalizado'
     };
     
     const record = await createRecord.mutateAsync(payload);
-    await updateStatus.mutateAsync({ id: appointmentId, status: 'completed' });
-    await signMutation.mutateAsync({ recordId: record.id, hash: "sha256:" + Math.random().toString(36).substring(7) });
+    if (!isDraft) {
+      await updateStatus.mutateAsync({ id: appointmentId, status: 'completed' });
+      await signMutation.mutateAsync({ recordId: record.id, hash: "sha256:" + Math.random().toString(36).substring(7) });
+    } else {
+      toast({ title: "Rascunho Salvo", description: "O atendimento foi salvo como rascunho." });
+    }
   };
 
   const handlePrint = () => {
@@ -470,9 +492,43 @@ export default function AttendPage() {
                         <div className="p-3 bg-primary/10 rounded-xl">
                           <FileText className="w-6 h-6 text-primary" />
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-display font-bold text-xl text-slate-900">Receituário Eletrônico</h3>
-                          <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Documento Digital Válido</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Documento Digital Válido</p>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-primary hover:text-primary hover:bg-primary/5">
+                                  + Buscar Medicamento
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[300px] p-0" align="start">
+                                <Command>
+                                  <CommandInput placeholder="Buscar medicamento..." />
+                                  <CommandList>
+                                    <CommandEmpty>Nenhum medicamento encontrado.</CommandEmpty>
+                                    <CommandGroup heading="Medicamentos Comuns">
+                                      {COMMON_MEDICATIONS.map((med) => (
+                                        <CommandItem
+                                          key={med.name}
+                                          onSelect={() => {
+                                            const current = form.getValues("prescription") || "";
+                                            const entry = `\n${med.name}\n${med.instructions}\n`;
+                                            form.setValue("prescription", current + entry);
+                                          }}
+                                        >
+                                          <div className="flex flex-col">
+                                            <span className="font-bold">{med.name}</span>
+                                            <span className="text-xs text-muted-foreground">{med.instructions}</span>
+                                          </div>
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
                         </div>
                         {signMutation.isSuccess && (
                           <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200 gap-1.5 px-3 py-1">
@@ -532,6 +588,18 @@ export default function AttendPage() {
             </Card>
           </div>
         </Form>
+        
+        {/* Floating Save Draft Button */}
+        <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-50">
+          <Button 
+            onClick={form.handleSubmit((data) => onSubmit(data, true))}
+            className="rounded-full w-14 h-14 shadow-xl bg-slate-800 hover:bg-slate-700 text-white p-0 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+            title="Salvar Rascunho"
+            disabled={createRecord.isPending}
+          >
+            {createRecord.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
+          </Button>
+        </div>
       </div>
     </LayoutShell>
   );
