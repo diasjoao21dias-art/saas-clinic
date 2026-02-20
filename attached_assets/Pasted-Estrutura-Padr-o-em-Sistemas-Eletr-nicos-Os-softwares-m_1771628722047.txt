@@ -1,0 +1,32 @@
+Estrutura Padrão em Sistemas Eletrônicos
+Os softwares médicos organizam a prescrição em campos obrigatórios para garantir a validade jurídica e a segurança do paciente: 
+STAR Telerradiologia
+STAR Telerradiologia
+ +1
+Identificação (Cabeçalho): Dados do médico (nome, CRM, especialidade) e da instituição de saúde.
+Identificação do Paciente: Nome completo e, em muitos sistemas, o CPF para facilitar a rastreabilidade.
+Inscrição (Corpo): Nome do medicamento (de marca ou genérico), concentração e forma farmacêutica.
+Subinscrição: Quantidade total de caixas, frascos ou ampolas.
+Adscrição (Posologia): Instruções detalhadas de uso (via de administração, horários e duração do tratamento).
+Assinatura Digital: Essencial em sistemas eletrônicos, deve ser feita com certificado digital padrão ICP-Brasil para que o documento tenha validade em farmácias. 
+cefet-mg
+cefet-mg
+ +6
+Funcionalidades Inteligentes dos Modelos
+Sistemas modernos oferecem recursos que vão além de um simples formulário:
+Separação Automática: O sistema identifica se um medicamento é de controle especial e separa automaticamente a receita em vias específicas (ex: Receita Branca para antibióticos ou de Controle Especial).
+Alertas de Interação: Softwares como o do CFM e a Memed exibem alertas automáticos se dois medicamentos prescritos apresentarem interações perigosas.
+Modelos Prontos: Permitem salvar "favoritos" ou protocolos para patologias comuns, agilizando o preenchimento.
+Acesso via QR Code: O paciente recebe um link por SMS ou e-mail, e o farmacêutico valida a receita através de um código de verificação ou QR Code. 
+YouTube
+YouTube
+ +4
+Tipos de Documentos Emitidos
+Os sistemas permitem a geração de diversos tipos de documentos integrados: 
+YouTube
+YouTube
+ +1
+Receituário Simples: Para medicamentos comuns e MIPS.
+Receita de Controle Especial: Utilizada para substâncias da Portaria 344 (geralmente emitida em duas vias).
+Atestados Médicos: Integrados à prescrição, facilitando a jornada do paciente.
+Solicitação de Exames: Com busca por códigos TUSS ou SUS
