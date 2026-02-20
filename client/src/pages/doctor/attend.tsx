@@ -207,6 +207,13 @@ export default function AttendPage() {
                 const res = await apiRequest("POST", `/api/appointments/${appointmentId}/ai-process`);
                 const data = await res.json();
                 queryClient.setQueryData([api.appointments.list.path, appointmentId], (old: any) => ({ ...old, ...data }));
+                
+                // Sincronizar dados da IA com o formulário
+                if (data.aiSummary) {
+                  const currentHistory = form.getValues("history") || "";
+                  form.setValue("history", `${currentHistory}\n\n[Resumo IA]: ${data.aiSummary}`.trim());
+                }
+                
                 toast({ title: "Processado", description: "Histórico e sugestões carregados via IA." });
               }}
             >
