@@ -13,8 +13,13 @@ import {
   type MedicalRecordWithDetails
 } from "@shared/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
+import session from "express-session";
+import createMemoryStore from "memorystore";
+
+const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
+  sessionStore: session.Store;
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -33,7 +38,7 @@ export interface IStorage {
   getAppointments(clinicId: number, filters?: { date?: string; startDate?: string; endDate?: string; doctorId?: number; status?: string; patientId?: number }): Promise<(Appointment & { patient: Patient; doctor: User })[]>;
   getAppointment(id: number, clinicId: number): Promise<Appointment | undefined>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
-  updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment>;
+  updateAppointment(id: number, clinicId: number, appointment: Partial<Appointment>): Promise<Appointment>;
   updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string, price?: number, type?: string, examType?: string }): Promise<Appointment>;
   deleteAppointment(id: number): Promise<void>;
 
@@ -79,6 +84,14 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+
+  constructor() {
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    });
+  }
+
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -112,7 +125,7 @@ export class DatabaseStorage implements IStorage {
 
   async getPatients(clinicId: number, search?: string): Promise<Patient[]> {
     if (search) {
-      return await db.select().from(patients).where(and(eq(patients.clinicId, clinicId), sql`name ILIKE ${'%' + search + '%'}`));
+      return await db.select().from(patients).where(and(eq(patients.clinicId, clinicId), sql`name LIKE ${'%' + search + '%'}`));
     }
     return await db.select().from(patients).where(eq(patients.clinicId, clinicId));
   }
@@ -169,7 +182,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
-    const [newApt] = await db.insert(appointments).values([appointment]).returning();
+    const [newApt] = await db.insert(appointments).values(appointment).returning();
     return newApt;
   }
 
@@ -236,7 +249,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord> {
-    const [newRecord] = await db.insert(medicalRecords).values([record]).returning();
+    const [newRecord] = await db.insert(medicalRecords).values(record).returning();
     await this.createMedicalRecordLog({
       medicalRecordId: newRecord.id,
       userId: record.doctorId,

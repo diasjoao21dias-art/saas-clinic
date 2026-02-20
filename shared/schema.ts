@@ -1,21 +1,21 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { relations, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // === TABLE DEFINITIONS ===
 
-export const clinics = pgTable("clinics", {
-  id: serial("id").primaryKey(),
+export const clinics = sqliteTable("clinics", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   address: text("address").notNull(),
   phone: text("phone").notNull(),
   subscriptionStatus: text("subscription_status").default("active").notNull(), // active, inactive
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const inventory = pgTable("inventory", {
-  id: serial("id").primaryKey(),
+export const inventory = sqliteTable("inventory", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   clinicId: integer("clinic_id").references(() => clinics.id).notNull(),
   name: text("name").notNull(),
   category: text("category").notNull(), // 'material', 'medicamento', 'equipamento', 'outro'
@@ -26,71 +26,71 @@ export const inventory = pgTable("inventory", {
   supplier: text("supplier"),
   location: text("location"),
   batchNumber: text("batch_number"),
-  expiryDate: date("expiry_date"),
+  expiryDate: text("expiry_date"),
   description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const inventoryTransactions = pgTable("inventory_transactions", {
-  id: serial("id").primaryKey(),
+export const inventoryTransactions = sqliteTable("inventory_transactions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   inventoryId: integer("inventory_id").references(() => inventory.id).notNull(),
   type: text("type").notNull(), // 'entrada', 'saida', 'baixa_automatica'
   quantity: integer("quantity").notNull(),
   appointmentId: integer("appointment_id").references(() => appointments.id),
   notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const tissBills = pgTable("tiss_bills", {
-  id: serial("id").primaryKey(),
+export const tissBills = sqliteTable("tiss_bills", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   clinicId: integer("clinic_id").references(() => clinics.id).notNull(),
   appointmentId: integer("appointment_id").references(() => appointments.id).notNull(),
   patientId: integer("patient_id").references(() => patients.id).notNull(),
   insuranceId: text("insurance_id").notNull(),
   status: text("status").default("pendente").notNull(), // pendente, gerada, enviada, paga
   xmlData: text("xml_data"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const digitalSignatures = pgTable("digital_signatures", {
-  id: serial("id").primaryKey(),
+export const digitalSignatures = sqliteTable("digital_signatures", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   medicalRecordId: integer("medical_record_id").references(() => medicalRecords.id).notNull(),
   doctorId: integer("doctor_id").references(() => users.id).notNull(),
   signatureHash: text("signature_hash").notNull(),
   certificateInfo: text("certificate_info"),
-  signedAt: timestamp("signed_at").defaultNow(),
+  signedAt: text("signed_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
   role: text("role").notNull(), // 'admin', 'operator', 'doctor', 'nurse'
   specialty: text("specialty"), // For doctors
   clinicId: integer("clinic_id").references(() => clinics.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const patients = pgTable("patients", {
-  id: serial("id").primaryKey(),
+export const patients = sqliteTable("patients", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   cpf: text("cpf"),
-  birthDate: date("birth_date").notNull(),
+  birthDate: text("birth_date").notNull(),
   phone: text("phone"),
   email: text("email"),
   gender: text("gender"),
   address: text("address"),
   clinicId: integer("clinic_id").references(() => clinics.id).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const appointments = pgTable("appointments", {
-  id: serial("id").primaryKey(),
+export const appointments = sqliteTable("appointments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   patientId: integer("patient_id").references(() => patients.id).notNull(),
   doctorId: integer("doctor_id").references(() => users.id).notNull(),
   clinicId: integer("clinic_id").references(() => clinics.id).notNull(),
-  date: date("date").notNull(),
+  date: text("date").notNull(),
   startTime: text("start_time").notNull(), // HH:mm
   duration: integer("duration").default(30).notNull(), // minutes
   price: integer("price").default(15000).notNull(), // Valor em centavos (R$ 150,00)
@@ -101,10 +101,10 @@ export const appointments = pgTable("appointments", {
   paymentStatus: text("payment_status").default("pendente").notNull(), // pendente, pago
   procedure: text("procedure"),
   insurance: text("insurance"),
-  isPrivate: boolean("is_private").default(false).notNull(),
+  isPrivate: integer("is_private", { mode: "boolean" }).default(false).notNull(),
   notes: text("notes"),
-  triageDone: boolean("triage_done").default(false).notNull(),
-  triageData: jsonb("triage_data").$type<{
+  triageDone: integer("triage_done", { mode: "boolean" }).default(false).notNull(),
+  triageData: text("triage_data", { mode: "json" }).$type<{
     weight?: string;
     height?: string;
     bloodPressure?: string;
@@ -114,20 +114,20 @@ export const appointments = pgTable("appointments", {
     oxygenSaturation?: string;
     notes?: string;
   }>(),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const medicalRecordLogs = pgTable("medical_record_logs", {
-  id: serial("id").primaryKey(),
+export const medicalRecordLogs = sqliteTable("medical_record_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   medicalRecordId: integer("medical_record_id").references(() => medicalRecords.id).notNull(),
   userId: integer("user_id").references(() => users.id).notNull(),
   action: text("action").notNull(), // 'create', 'update', 'delete', 'sign'
-  changes: jsonb("changes"),
-  createdAt: timestamp("created_at").defaultNow(),
+  changes: text("changes", { mode: "json" }),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const medicalRecords = pgTable("medical_records", {
-  id: serial("id").primaryKey(),
+export const medicalRecords = sqliteTable("medical_records", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   appointmentId: integer("appointment_id").references(() => appointments.id),
   patientId: integer("patient_id").references(() => patients.id).notNull(),
   doctorId: integer("doctor_id").references(() => users.id).notNull(),
@@ -138,7 +138,7 @@ export const medicalRecords = pgTable("medical_records", {
   history: text("history"),
   medications: text("medications"),
   allergies: text("allergies"),
-  vitals: jsonb("vitals").$type<{
+  vitals: text("vitals", { mode: "json" }).$type<{
     bloodPressure?: string;
     heartRate?: string;
     temperature?: string;
@@ -151,17 +151,17 @@ export const medicalRecords = pgTable("medical_records", {
   prescription: text("prescription"),
   notes: text("notes"), // Evolution notes
   
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
-export const availabilityExceptions = pgTable("availability_exceptions", {
-  id: serial("id").primaryKey(),
+export const availabilityExceptions = sqliteTable("availability_exceptions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   doctorId: integer("doctor_id").references(() => users.id).notNull(),
   clinicId: integer("clinic_id").references(() => clinics.id).notNull(),
   date: text("date").notNull(),
-  isAvailable: boolean("is_available").default(false).notNull(),
+  isAvailable: integer("is_available", { mode: "boolean" }).default(false).notNull(),
   reason: text("reason"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 // === RELATIONS ===
@@ -231,6 +231,7 @@ export const insertInventoryTransactionSchema = createInsertSchema(inventoryTran
 export const insertTissBillSchema = createInsertSchema(tissBills).omit({ id: true, createdAt: true });
 export const insertDigitalSignatureSchema = createInsertSchema(digitalSignatures).omit({ id: true, signedAt: true });
 export const insertAvailabilityExceptionSchema = createInsertSchema(availabilityExceptions).omit({ id: true, createdAt: true });
+export const insertMedicalRecordLogSchema = createInsertSchema(medicalRecordLogs).omit({ id: true, createdAt: true });
 
 // === EXPLICIT TYPES ===
 
@@ -239,7 +240,6 @@ export type User = typeof users.$inferSelect;
 export type Patient = typeof patients.$inferSelect;
 export type Appointment = typeof appointments.$inferSelect;
 export type MedicalRecord = typeof medicalRecords.$inferSelect;
-export const insertMedicalRecordLogSchema = createInsertSchema(medicalRecordLogs).omit({ id: true, createdAt: true });
 
 export type MedicalRecordLog = typeof medicalRecordLogs.$inferSelect;
 export type InsertMedicalRecordLog = z.infer<typeof insertMedicalRecordLogSchema>;
