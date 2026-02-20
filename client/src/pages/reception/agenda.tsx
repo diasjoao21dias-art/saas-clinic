@@ -42,15 +42,15 @@ function AIScheduler({ onAppointmentCreated }: { onAppointmentCreated: () => voi
   const recorder = useVoiceRecorder();
   
   const stream = useVoiceStream({
-    onUserTranscript: (text) => setTranscript(`Você: ${text}`),
-    onTranscript: (text, full) => setTranscript(prev => `${prev}\n\nIA: ${full}`),
-    onComplete: async (fullText) => {
+    onUserTranscript: (text: string) => setTranscript(`Você: ${text}`),
+    onTranscript: (text: string, full: string) => setTranscript(prev => `${prev}\n\nIA: ${full}`),
+    onComplete: async (fullText: string) => {
       setIsProcessing(false);
       // Aqui poderíamos processar o JSON retornado se o prompt fosse específico
       // Por agora, apenas notificamos
       toast({ title: "Processamento concluído", description: "A IA analisou seu pedido." });
     },
-    onError: (err) => {
+    onError: (err: Error) => {
       setIsProcessing(false);
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
