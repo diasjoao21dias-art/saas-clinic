@@ -757,6 +757,31 @@ export default function AgendaPage() {
 
                   <FormField
                     control={aptForm.control}
+                    name="priority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prioridade</FormLabel>
+                        <Select onValueChange={(v) => field.onChange(parseInt(v))} value={field.value?.toString() || "1"}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione a prioridade" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="1">Baixa</SelectItem>
+                            <SelectItem value="2">Média</SelectItem>
+                            <SelectItem value="3">Alta (Urgente)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Prioridade alta protege o horário contra reagendamentos automáticos.
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={aptForm.control}
                     name="notes"
                     render={({ field }) => (
                       <FormItem>
