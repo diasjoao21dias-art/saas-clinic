@@ -34,16 +34,16 @@ The project follows a **monorepo** pattern with three main directories:
 ### Backend
 
 - **Framework**: Express.js 5 running on Node.js with TypeScript (executed via `tsx`)
-- **Authentication**: Passport.js with Local Strategy, using cookie-based sessions (express-session). Session store connects to PostgreSQL via `connect-pg-simple`
+- **Authentication**: Passport.js with Local Strategy, using cookie-based sessions (express-session) with MemoryStore
 - **Password Hashing**: Node.js built-in `crypto.scrypt`
 - **API Design**: REST API with all routes prefixed `/api/`. Route contracts are defined in `shared/routes.ts` with Zod schemas for input validation and response typing
 - **Authorization**: Role-based middleware (`requireAuth`) checks `req.isAuthenticated()`. Route-level role checks enforce RBAC (admin, operator, doctor)
 
 ### Database
 
-- **Database**: PostgreSQL (required — `DATABASE_URL` environment variable must be set)
+- **Database**: SQLite (file-based, stored as `sqlite.db` in project root)
 - **ORM**: Drizzle ORM with `drizzle-zod` for schema-to-Zod type generation
-- **Schema Location**: `shared/schema.ts` — defines all tables and relations
+- **Schema Location**: `shared/schema.ts` — defines all tables and relations using `drizzle-orm/sqlite-core`
 - **Migrations**: Managed via `drizzle-kit push` (schema push approach, not migration files)
 - **Key Tables**:
   - `clinics` — Multi-tenant clinic entities with subscription status
@@ -70,7 +70,7 @@ The `server/storage.ts` file implements a `DatabaseStorage` class conforming to 
 
 ### Required Services
 
-- **PostgreSQL Database**: Required. Must be provisioned and connection string set as `DATABASE_URL` environment variable
+- **SQLite Database**: File-based, no external provisioning needed (`sqlite.db` in project root)
 - **Session Secret**: `SESSION_SECRET` environment variable (falls back to a hardcoded default for development)
 
 ### Key npm Packages
@@ -78,9 +78,9 @@ The `server/storage.ts` file implements a `DatabaseStorage` class conforming to 
 | Package | Purpose |
 |---------|---------|
 | `express` (v5) | HTTP server framework |
-| `drizzle-orm` + `drizzle-kit` | PostgreSQL ORM and schema management |
+| `drizzle-orm` + `drizzle-kit` | SQLite ORM and schema management |
 | `passport` + `passport-local` | Authentication |
-| `express-session` + `connect-pg-simple` | Session management with PostgreSQL store |
+| `express-session` + `memorystore` | Session management with in-memory store |
 | `@tanstack/react-query` | Server state management on frontend |
 | `wouter` | Client-side routing |
 | `zod` + `drizzle-zod` | Schema validation and type derivation |
