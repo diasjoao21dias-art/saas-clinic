@@ -1,11 +1,11 @@
 import { useAuth } from "@/hooks/use-auth";
 import LayoutShell from "@/components/layout-shell";
-import { Calendar, Users, Clock, AlertCircle, Plus, Trash2, Edit2, Loader2, Sparkles, Mic, MicOff } from "lucide-react";
+import { Calendar, Users, Clock, AlertCircle, Plus, Trash2, Edit2, Loader2 } from "lucide-react";
 import { useAppointments } from "@/hooks/use-appointments";
 import { format, addMinutes, parseISO } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +23,6 @@ import { api } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 import { StatCard } from "@/components/stat-card";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useVoiceRecorder, useVoiceStream } from "@/replit_integrations/audio";
 
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -33,101 +32,6 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { eachDayOfInterval } from "date-fns";
 import { DateRange } from "react-day-picker";
-
-function AIScheduler({ onAppointmentCreated }: { onAppointmentCreated: () => void }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [transcript, setTranscript] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
-  const recorder = useVoiceRecorder();
-  
-  const stream = useVoiceStream({
-    onUserTranscript: (text: string) => setTranscript(`Você: ${text}`),
-    onTranscript: (text: string, full: string) => setTranscript(prev => `${prev}\n\nIA: ${full}`),
-    onComplete: async (fullText: string) => {
-      setIsProcessing(false);
-      // Aqui poderíamos processar o JSON retornado se o prompt fosse específico
-      // Por agora, apenas notificamos
-      toast({ title: "Processamento concluído", description: "A IA analisou seu pedido." });
-    },
-    onError: (err: Error) => {
-      setIsProcessing(false);
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    }
-  });
-
-  const [conversationId, setConversationId] = useState<number | null>(null);
-
-  const startConversation = async () => {
-    const res = await apiRequest("POST", "/api/conversations", { title: "Agendamento Inteligente" });
-    const data = await res.json();
-    setConversationId(data.id);
-    setIsOpen(true);
-  };
-
-  const handleMicClick = async () => {
-    if (!conversationId) return;
-    
-    if (recorder.state === "recording") {
-      setIsProcessing(true);
-      const blob = await recorder.stopRecording();
-      await stream.streamVoiceResponse(`/api/conversations/${conversationId}/messages`, blob);
-    } else {
-      await recorder.startRecording();
-    }
-  };
-
-  return (
-    <>
-      <Button variant="outline" className="gap-2 border-primary text-primary hover:bg-primary/5" onClick={startConversation}>
-        <Sparkles className="w-4 h-4" /> Agenda IA
-      </Button>
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              Assistente de Agendamento
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="bg-slate-50 rounded-lg p-4 min-h-[200px] max-h-[300px] overflow-y-auto whitespace-pre-wrap text-sm border">
-              {transcript || "Diga algo como: 'Agende uma consulta para João Silva com o Dr. House amanhã às 14h'"}
-            </div>
-            
-            <div className="flex flex-col items-center gap-4">
-              <Button
-                size="lg"
-                className={`w-20 h-20 rounded-full shadow-lg transition-all ${
-                  recorder.state === "recording" ? "bg-red-500 hover:bg-red-600 animate-pulse" : "bg-primary hover:bg-primary/90"
-                }`}
-                onClick={handleMicClick}
-                disabled={isProcessing}
-              >
-                {recorder.state === "recording" ? (
-                  <MicOff className="w-8 h-8 text-white" />
-                ) : isProcessing ? (
-                  <Loader2 className="w-8 h-8 text-white animate-spin" />
-                ) : (
-                  <Mic className="w-8 h-8 text-white" />
-                )}
-              </Button>
-              <p className="text-sm text-muted-foreground font-medium">
-                {recorder.state === "recording" ? "Ouvindo... Clique para parar" : isProcessing ? "IA está pensando..." : "Clique no microfone para falar"}
-              </p>
-            </div>
-          </div>
-          <DialogFooter className="sm:justify-start">
-            <p className="text-xs text-muted-foreground italic">
-              Dica: A IA pode entender nomes de pacientes, médicos e horários naturais.
-            </p>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
 
 export default function AgendaPage() {
   const [viewRange, setViewRange] = useState({ 
@@ -430,7 +334,6 @@ export default function AgendaPage() {
             </Select>
             {!isReadOnly && (
               <>
-                <AIScheduler onAppointmentCreated={() => queryClient.invalidateQueries({ queryKey: [api.appointments.list.path] })} />
                 <Button onClick={() => { setEditingAppointment(null); setIsAptDialogOpen(true); }} className="gap-2">
                   <Plus className="w-4 h-4" /> Agendar Consulta
                 </Button>

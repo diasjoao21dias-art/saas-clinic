@@ -7,17 +7,12 @@ import { z } from "zod";
 import { clinics, users, patients } from "@shared/schema";
 import { db } from "./db";
 
-import { registerAudioRoutes } from "./replit_integrations/audio";
-
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   // Setup Auth (Passport)
   setupAuth(app);
-
-  // Register AI Integrations
-  registerAudioRoutes(app);
 
   // Middleware to enforce auth
   const requireAuth = (req: any, res: any, next: any) => {
