@@ -182,7 +182,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
-    const [newApt] = await db.insert(appointments).values(appointment).returning();
+    const [newApt] = await db.insert(appointments).values(appointment as any).returning();
     return newApt;
   }
 
@@ -249,7 +249,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMedicalRecord(record: InsertMedicalRecord): Promise<MedicalRecord> {
-    const [newRecord] = await db.insert(medicalRecords).values(record).returning();
+    const [newRecord] = await db.insert(medicalRecords).values(record as any).returning();
     await this.createMedicalRecordLog({
       medicalRecordId: newRecord.id,
       userId: record.doctorId,
