@@ -307,7 +307,14 @@ export async function registerRoutes(
         "Monitorar pressão arterial"
       ];
 
-      const updated = await storage.updateAppointmentAI(id, { aiSummary, followUpTasks });
+      // Simulated WhatsApp/Email notification logic
+      console.log(`[Notification] Enviando lembrete para paciente ${apt.patientId} da clínica ${clinicId}`);
+
+      const updated = await storage.updateAppointmentAI(id, { 
+        aiSummary, 
+        followUpTasks,
+        notificationSent: true 
+      });
       res.json(updated);
     } catch (err) {
       res.status(500).json({ message: "Erro ao processar IA" });

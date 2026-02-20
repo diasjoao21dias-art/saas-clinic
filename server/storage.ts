@@ -194,12 +194,22 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async updateAppointmentAI(id: number, data: { aiSummary?: string, followUpTasks?: string[] }): Promise<Appointment> {
+  async updateAppointmentAI(id: number, data: { aiSummary?: string, followUpTasks?: string[], notificationSent?: boolean }): Promise<Appointment> {
     const [updated] = await db.update(appointments)
       .set(data as any)
       .where(eq(appointments.id, id))
       .returning();
     return updated;
+  }
+
+  async getPriorityAppointments(clinicId: number, date: string): Promise<Appointment[]> {
+    return await db.select().from(appointments)
+      .where(and(
+        eq(appointments.clinicId, clinicId),
+        eq(appointments.date, date),
+        sql`status != 'cancelado'`
+      ))
+      .orderBy(desc(appointments.priority));
   }
 
   async updateAppointmentStatus(id: number, status: string, paymentDetails?: { method?: string, status?: string, price?: number }): Promise<Appointment> {
