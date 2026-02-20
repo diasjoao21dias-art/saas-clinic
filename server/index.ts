@@ -94,7 +94,8 @@ app.use((req, res, next) => {
     {
       port,
       host: "0.0.0.0",
-      reusePort: true,
+      // No Windows local, reusePort pode causar erros dependendo da versão do Node/OS
+      reusePort: process.platform !== "win32", 
     },
     () => {
       log(`serving on port ${port}`);
