@@ -200,6 +200,19 @@ export default function AttendPage() {
               <FileText className="w-4 h-4 mr-2" />
               Carregar Modelo
             </Button>
+            <Button 
+              variant="outline" 
+              className="bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200"
+              onClick={async () => {
+                const res = await apiRequest("POST", `/api/appointments/${appointmentId}/ai-process`);
+                const data = await res.json();
+                queryClient.setQueryData([api.appointments.list.path, appointmentId], (old: any) => ({ ...old, ...data }));
+                toast({ title: "Processado", description: "Histórico e sugestões carregados via IA." });
+              }}
+            >
+              <ShieldCheck className="w-4 h-4 mr-2" />
+              Resumo IA
+            </Button>
             <Button variant="outline">
               <History className="w-4 h-4 mr-2" />
               Histórico do Paciente
@@ -331,17 +344,43 @@ export default function AttendPage() {
 
             <Card className="lg:col-span-2 border-none shadow-sm flex flex-col h-full overflow-hidden bg-white">
               <Tabs defaultValue="anamnesis" className="h-full flex flex-col">
-                <div className="px-6 pt-6 border-b">
-                  <TabsList className="grid w-full grid-cols-4 mb-6 bg-slate-100/50 p-1">
-                    <TabsTrigger value="anamnesis">Anamnese</TabsTrigger>
-                    <TabsTrigger value="diagnosis">Diagnóstico</TabsTrigger>
-                    <TabsTrigger value="prescription">Receituário</TabsTrigger>
-                    <TabsTrigger value="history">Audit</TabsTrigger>
-                  </TabsList>
-                </div>
+                  <div className="px-6 pt-6 border-b">
+                    <TabsList className="grid w-full grid-cols-4 mb-6 bg-slate-100/50 p-1">
+                      <TabsTrigger value="anamnesis">Anamnese</TabsTrigger>
+                      <TabsTrigger value="diagnosis">Diagnóstico</TabsTrigger>
+                      <TabsTrigger value="prescription">Receituário</TabsTrigger>
+                      <TabsTrigger value="history">Audit</TabsTrigger>
+                    </TabsList>
+                  </div>
 
-                <ScrollArea className="flex-1 p-6">
-                  <TabsContent value="history" className="space-y-6 mt-0">
+                  <ScrollArea className="flex-1 p-6">
+                    {appointment?.aiSummary && (
+                      <div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 animate-in fade-in slide-in-from-top-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 text-primary">
+                            <ShieldCheck className="w-4 h-4" />
+                            <h4 className="text-sm font-bold font-display">Resumo Inteligente</h4>
+                          </div>
+                          <Badge variant="outline" className="bg-white/50 text-[10px] h-4">Sincronizado com Histórico</Badge>
+                        </div>
+                        <p className="text-sm text-slate-700 mb-3 leading-relaxed">
+                          {appointment.aiSummary}
+                        </p>
+                        {appointment.followUpTasks && appointment.followUpTasks.length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="text-[10px] uppercase font-bold text-primary/60 tracking-wider">Follow-up Automático</h5>
+                            <div className="flex flex-wrap gap-2">
+                              {appointment.followUpTasks.map((task: string, i: number) => (
+                                <Badge key={i} variant="secondary" className="bg-white/50 text-primary border-primary/10">
+                                  {task}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <TabsContent value="history" className="space-y-6 mt-0">
                     <MedicalRecordAuditLogs patientId={appointment.patient.id} />
                   </TabsContent>
                   <TabsContent value="anamnesis" className="space-y-6 mt-0">

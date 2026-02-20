@@ -141,7 +141,14 @@ export default function DoctorDashboard() {
                         </div>
                         <div>
                           <p className="font-bold text-slate-900">{apt.patient.name}</p>
-                          <p className="text-xs text-muted-foreground">{apt.startTime} • {apt.duration} min</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-muted-foreground">{apt.startTime} • {apt.duration} min</p>
+                            {apt.priority > 1 && (
+                              <Badge variant="destructive" className="h-4 text-[10px] px-1">
+                                {apt.priority === 3 ? "Alta" : "Média"}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <Link href={`/doctor/attend/${apt.id}`}>
