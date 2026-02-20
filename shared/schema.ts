@@ -3,6 +3,8 @@ import { relations, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export * from "./models/chat";
+
 // === TABLE DEFINITIONS ===
 
 export const clinics = sqliteTable("clinics", {
