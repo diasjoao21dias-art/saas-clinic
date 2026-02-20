@@ -95,10 +95,11 @@ export function registerAudioRoutes(app: Express): void {
 
       // 6. Stream audio response from gpt-audio
       const stream = await openai.chat.completions.create({
-        model: "gpt-audio",
-        modalities: ["text", "audio"],
-        audio: { voice, format: "pcm16" },
-        messages: chatHistory,
+        model: "gpt-5.1",
+        messages: [
+          { role: "system", content: "Você é um assistente de agendamento de clínica médica. Ajude o usuário a organizar a agenda. Se ele pedir para agendar, confirme os detalhes (paciente, médico, data, hora). Use um tom profissional e amigável." },
+          ...chatHistory
+        ],
         stream: true,
       });
 
