@@ -158,6 +158,10 @@ export default function AttendPage() {
       if (!isDraft) {
         await updateStatus.mutateAsync({ id: appointmentId, status: 'finalizado' });
         await signMutation.mutateAsync({ recordId: record.id, hash: "sha256:" + Math.random().toString(36).substring(7) });
+        
+        toast({ title: "Atendimento Finalizado", description: "O atendimento foi finalizado e assinado com sucesso." });
+        // Optionally redirect or refresh
+        queryClient.invalidateQueries({ queryKey: [api.appointments.list.path] });
       } else {
         toast({ title: "Rascunho Salvo", description: "O atendimento foi salvo como rascunho." });
       }
