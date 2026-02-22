@@ -67,12 +67,15 @@ export default function AttendPage() {
 
   const handleDocTypeChange = (type: string) => {
     setActiveDocType(type);
-    const currentPrescription = form.getValues("prescription");
+    const currentPrescription = form.getValues("prescription") || "";
     
-    // Check if current content is just a default template or empty
+    // Check if current content is just a default template (ignoring placeholders) or empty
     const isDefaultOrEmpty = !currentPrescription || 
       currentPrescription.trim() === "" || 
-      Object.values(docTemplates).some(t => t === currentPrescription);
+      Object.values(docTemplates).some(t => {
+        // Compare first 20 chars to identify template type even if name was replaced
+        return currentPrescription.startsWith(t.substring(0, 20));
+      });
 
     if (isDefaultOrEmpty) {
       let newContent = docTemplates[type];
