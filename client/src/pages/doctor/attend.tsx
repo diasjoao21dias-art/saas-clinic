@@ -48,6 +48,13 @@ export default function AttendPage() {
   const appointmentId = parseInt(params?.id || "0");
   const [activeDocType, setActiveDocType] = useState('receituario_simples');
 
+  const docTemplates: Record<string, string> = {
+    receituario_simples: "Rx:\n\n1. [Medicamento] [Concentração] [Forma]\nTomar [Quantidade] [Instruções] por [Dias] dias.",
+    receituario_especial: "RECEITA DE CONTROLE ESPECIAL\n\nRx:\n\n1. [Medicamento Controlado] [Concentração]\nTomar conforme orientação médica restrita.",
+    atestado: "ATESTADO MÉDICO\n\nAtesto para os devidos fins que o(a) Sr(a). [Nome] foi atendido(a) nesta data e necessita de [Dias] dias de afastamento das atividades laborais por motivo de doença.",
+    exame: "SOLICITAÇÃO DE EXAME\n\nSolicito a realização dos seguintes exames para fins diagnósticos:\n\n1. [Nome do Exame]\n2. [Nome do Exame]",
+  };
+
   const { data: appointment, isLoading } = useQuery({
     queryKey: [api.appointments.list.path, appointmentId],
     queryFn: async () => {
@@ -57,6 +64,24 @@ export default function AttendPage() {
     },
     enabled: !!appointmentId,
   });
+
+  const handleDocTypeChange = (type: string) => {
+    setActiveDocType(type);
+    const currentPrescription = form.getValues("prescription");
+    
+    // Check if current content is just a default template or empty
+    const isDefaultOrEmpty = !currentPrescription || 
+      currentPrescription.trim() === "" || 
+      Object.values(docTemplates).some(t => t === currentPrescription);
+
+    if (isDefaultOrEmpty) {
+      let newContent = docTemplates[type];
+      if (type === 'atestado' && appointment?.patient?.name) {
+        newContent = newContent.replace("[Nome]", appointment.patient.name);
+      }
+      form.setValue("prescription", newContent);
+    }
+  };
 
   const signMutation = useMutation({
     mutationFn: async ({ recordId, hash }: { recordId: number, hash: string }) => {
@@ -84,7 +109,7 @@ export default function AttendPage() {
       history: "",
       allergies: "",
       diagnosis: "",
-      prescription: "",
+      prescription: docTemplates.receituario_simples,
       notes: "",
       vitals: {
         bloodPressure: "",
@@ -132,7 +157,6 @@ export default function AttendPage() {
     if (!appointment || !appointment.patient || !appointment.doctor) return;
 
     const patientName = appointment.patient.name;
-    const patientCpf = appointment.patient.cpf || "---.---.---- --";
     const doctorName = appointment.doctor.name;
     const doctorSpecialty = appointment.doctor.specialty || "Clínico Geral";
     const clinicName = "MediFlow Clinic";
@@ -148,78 +172,71 @@ export default function AttendPage() {
         <head>
           <title>${docTypeLabel} - ${patientName}</title>
           <style>
-            @page { margin: 2cm; }
-            body { font-family: sans-serif; color: #1e293b; line-height: 1.5; padding: 0; margin: 0; }
-            .header { text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
-            .clinic-name { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase; }
-            .doctor-header-info { font-size: 14px; color: #64748b; margin-top: 4px; }
-            .doc-title { text-align: center; font-size: 18px; font-weight: 700; text-transform: uppercase; margin-bottom: 40px; border: 1px solid #e2e8f0; padding: 8px; }
-            .info-section { margin-bottom: 30px; display: flex; justify-content: space-between; font-size: 14px; }
-            .patient-box { border: 1px solid #e2e8f0; padding: 15px; border-radius: 4px; flex: 1; margin-right: 20px; }
-            .date-box { border: 1px solid #e2e8f0; padding: 15px; border-radius: 4px; width: 150px; text-align: center; }
-            .label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; display: block; }
-            .content-body { min-height: 450px; white-space: pre-wrap; font-size: 16px; padding: 10px 5px; }
-            .footer { margin-top: 50px; position: relative; }
-            .signature-area { text-align: center; width: 300px; margin: 0 auto; }
-            .signature-line { border-top: 1px solid #0f172a; margin-bottom: 8px; }
-            .doctor-signature-name { font-weight: 700; font-size: 14px; margin: 0; }
-            .doctor-crm { font-size: 12px; color: #64748b; margin: 0; }
-            .digital-tag { position: absolute; bottom: 0; right: 0; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 9px; color: #94a3b8; display: flex; align-items: center; gap: 8px; }
-            .qr-placeholder { width: 50px; height: 50px; background: #f1f5f9; border: 1px solid #e2e8f0; }
+            @page { margin: 1cm; }
+            body { font-family: 'Courier New', Courier, monospace; color: #000; line-height: 1.2; padding: 0; margin: 0; font-size: 12px; }
+            .page-border { border: 2px solid #000; padding: 10px; min-height: 95vh; display: flex; flex-direction: column; }
+            .header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+            .header-table td { border: 1px solid #000; padding: 5px; vertical-align: middle; }
+            .title-cell { text-align: center; }
+            .title-main { font-size: 14px; font-weight: bold; margin: 0; }
+            .title-sub { font-size: 10px; margin: 0; }
+            .info-grid { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+            .info-grid td { border: 1px solid #000; padding: 3px 8px; font-size: 11px; }
+            .label { font-size: 9px; font-weight: bold; display: block; margin-bottom: 2px; text-transform: uppercase; }
+            .doc-title-bar { text-align: center; font-weight: bold; border: 1px solid #000; padding: 5px; background: #f0f0f0; text-transform: uppercase; margin-bottom: 10px; font-size: 13px; }
+            .prescription-container { border: 1px solid #000; flex: 1; padding: 15px; position: relative; }
+            .prescription-content { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
+            .footer-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            .footer-table td { border: 1px solid #000; padding: 5px; font-size: 9px; }
+            .signature-box { text-align: center; padding-top: 20px !important; }
+            .sig-line { border-top: 1px solid #000; width: 200px; margin: 0 auto 5px; }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1 class="clinic-name">${clinicName}</h1>
-            <div class="doctor-header-info">${doctorName} - ${doctorSpecialty}</div>
+          <div class="page-border">
+            <table class="header-table">
+              <tr>
+                <td style="width: 80px; text-align: center; font-weight: bold;">MediFlow</td>
+                <td class="title-cell">
+                  <p class="title-main">GOVERNO DO ESTADO - SECRETARIA DE SAÚDE</p>
+                  <p class="title-sub">UNIDADE DE EMERGÊNCIA - ${clinicName}</p>
+                </td>
+              </tr>
+            </table>
+            <table class="info-grid">
+              <tr>
+                <td style="width: 15%"><span class="label">SETOR:</span> CONSULTÓRIO</td>
+                <td style="width: 45%"><span class="label">PACIENTE:</span> ${patientName}</td>
+                <td style="width: 15%"><span class="label">REGISTRO:</span> ${appointment.id}</td>
+                <td style="width: 10%"><span class="label">DATA:</span> ${dateStr}</td>
+                <td style="width: 15%"><span class="label">CRM:</span> ${doctorName}</td>
+              </tr>
+            </table>
+            <div class="doc-title-bar">${docTypeLabel}</div>
+            <div class="prescription-container">
+              <div class="prescription-content">${prescriptionContent || "Rx:\n\nSem prescrição informada."}</div>
+            </div>
+            <table class="footer-table">
+              <tr>
+                <td style="width: 60%">
+                  <span class="label">CONTROLE DE MEDICAMENTOS:</span> [ ] SIM [ ] NÃO
+                  <div style="margin-top: 10px;">ASSINADO DIGITALMENTE VIA PADRÃO ICP-BRASIL</div>
+                </td>
+                <td class="signature-box">
+                  <div class="sig-line"></div>
+                  <div style="font-weight: bold;">${doctorName}</div>
+                  <div>${doctorSpecialty}</div>
+                </td>
+              </tr>
+            </table>
           </div>
-          <div class="doc-title">${docTypeLabel}</div>
-          <div class="info-section">
-            <div class="patient-box">
-              <span class="label">Paciente</span>
-              <div style="font-weight: 700; font-size: 16px;">${patientName}</div>
-              <div style="font-size: 12px; color: #64748b; margin-top: 2px;">CPF: ${patientCpf}</div>
-            </div>
-            <div class="date-box">
-              <span class="label">Data</span>
-              <div style="font-weight: 700;">${dateStr}</div>
-            </div>
-          </div>
-          <div class="content-body">${prescriptionContent || "Rx:\n\nSem medicamentos prescritos."}</div>
-          <div class="footer">
-            <div class="signature-area">
-              <div class="signature-line"></div>
-              <p class="doctor-signature-name">${doctorName}</p>
-              <p class="doctor-crm">${doctorSpecialty}</p>
-            </div>
-            <div class="digital-tag">
-              <div>
-                <div style="font-weight: 700; color: #64748b; margin-bottom: 2px;">ASSINADO DIGITALMENTE</div>
-                <div>ICP-Brasil Padrão v2.1</div>
-              </div>
-              <div class="qr-placeholder"></div>
-            </div>
-          </div>
-          <script>
-            window.onload = () => {
-              window.print();
-              setTimeout(() => window.close(), 500);
-            };
-          </script>
+          <script>window.onload = () => { window.print(); setTimeout(() => window.close(), 500); };</script>
         </body>
       </html>
     `;
 
     printWindow.document.write(htmlContent);
     printWindow.document.close();
-  };
-
-  const loadTemplate = () => {
-    const template = localStorage.getItem("selected_template");
-    if (template) {
-      form.setValue("prescription", template);
-      localStorage.removeItem("selected_template");
-    }
   };
 
   if (isLoading) {
@@ -256,7 +273,7 @@ export default function AttendPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={loadTemplate} className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
+            <Button variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">
               <FileText className="w-4 h-4 mr-2" /> Modelos
             </Button>
             <Button 
@@ -420,7 +437,7 @@ export default function AttendPage() {
                             variant={activeDocType === type.id ? "default" : "outline"}
                             size="sm"
                             className="text-[10px] h-7 font-bold"
-                            onClick={() => setActiveDocType(type.id)}
+                            onClick={() => handleDocTypeChange(type.id)}
                           >
                             {type.label}
                           </Button>
@@ -448,7 +465,7 @@ export default function AttendPage() {
                                   {...field} 
                                   value={field.value || ""} 
                                   className="min-h-[400px] border-none focus-visible:ring-0 text-base font-mono bg-transparent leading-relaxed p-6" 
-                                  placeholder="Rx:\n\n1. Medicamento [Concentração] [Forma]\nTomar [Quantidade] [Instruções]..." 
+                                  placeholder="Preencha o conteúdo da prescrição aqui..." 
                                 />
                               </FormControl>
                             </FormItem>
