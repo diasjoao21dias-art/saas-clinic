@@ -130,24 +130,39 @@ export default function AttendPage() {
   const handleSave = async (data: InsertMedicalRecord, isDraft: boolean) => {
     if (!appointment || !appointment.patient || !appointment.doctor) return;
 
-    const payload = {
+    // Use default empty strings if values are missing
+    const payload: InsertMedicalRecord = {
       ...data,
+      chiefComplaint: data.chiefComplaint || "",
+      history: data.history || "",
+      diagnosis: data.diagnosis || "",
+      prescription: data.prescription || "",
+      allergies: data.allergies || "",
+      notes: data.notes || "",
       patientId: appointment.patient.id,
       doctorId: appointment.doctor.id,
       clinicId: appointment.clinicId,
       appointmentId: appointment.id,
-      status: isDraft ? 'rascunho' : 'finalizado'
+      status: isDraft ? 'rascunho' : 'finalizado',
+      vitals: data.vitals || {
+        bloodPressure: "",
+        temperature: "",
+        heartRate: "",
+        weight: "",
+        height: "",
+      }
     };
     
     try {
       const record = await createRecord.mutateAsync(payload);
       if (!isDraft) {
-        await updateStatus.mutateAsync({ id: appointmentId, status: 'completed' });
+        await updateStatus.mutateAsync({ id: appointmentId, status: 'finalizado' });
         await signMutation.mutateAsync({ recordId: record.id, hash: "sha256:" + Math.random().toString(36).substring(7) });
       } else {
         toast({ title: "Rascunho Salvo", description: "O atendimento foi salvo como rascunho." });
       }
     } catch (error) {
+      console.error("Save error:", error);
       toast({ title: "Erro", description: "Não foi possível salvar o registro.", variant: "destructive" });
     }
   };
